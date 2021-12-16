@@ -3,14 +3,17 @@ package gameInstances
 import gameInstances.states.ActionKeys
 import gameInstances.states.enums.Dir
 import gameInstances.states.enums.IType
+import gameInstances.states.enums.VertState
 import graphicInstances.Size
 import graphicInstances.VectorD
+import graphicInstances.VectorInt
 import kotlin.math.max
 import kotlin.math.min
 
 class World(val tile : Size) {
     val currentLevel = Level(tile)
-    val character = Character(tile / 2, VectorD(190.0, 270.0), tile)
+    val character = Character(Size(9, 9), VectorD(190.0, 270.0), tile)
+    var activeMovable : Movable? = null
 
     fun update(actions: ActionKeys) {
         for (elem in currentLevel.movable) {
@@ -18,35 +21,59 @@ class World(val tile : Size) {
             elem.move(Dir.NO, Dir.NO, this)
         }
         character.checkFall(this)
-        character.act(actions, this)
+        changeActive(actions)
+        character.act(activeMovable, actions, this)
     }
 
-    fun checkInterX(startY: Int, endY: Int, startX: Int, endX: Int): Pair<Item, Int> =
-            checkInter(startX, endX, startY, endY, getCurInter = {main, other -> getInter(main, other, main)})
+    private fun changeActive(actions: ActionKeys) {
+        if (actions.mouseClicked && activeMovable == null) {
+            val pos = VectorInt(actions.mousePos.x / tile.width, actions.mousePos.y / tile.height)
+            val item = currentLevel.tryGetItem(pos.x, pos.y)
+            when(item?.type) {
+                IType.EMPTY -> when {
+                    item.movables.isEmpty() -> {}
+                    else -> {
+                        item.movables.forEach { movable ->
+                            if (movable.isPointIn(actions.mousePos) && !movable.state.isActive){
+                                activeMovable = movable
+                                movable.state.vertState = VertState.NOT_FALLING
+                            }}}
+                }
+                else -> {}
+            }
+        } else if (actions.mouseClicked) {
+            activeMovable?.state?.vertState = VertState.FALLING
+            activeMovable = null
+        }
+    }
 
-    fun checkInterY(startX: Int, endX: Int, startY: Int, endY: Int): Pair<Item, Int> =
-        checkInter(startY, endY, startX, endX, getCurInter = {main, other -> getInter(other, main, main)})
+    fun checkInterX(startY: Int, endY: Int, startX: Int, endX: Int) =
+            checkInter(startX, endX, startY, endY, getCurInter = {main, other -> getInter(main, other)})
+
+    fun checkInterY(startX: Int, endX: Int, startY: Int, endY: Int) =
+        checkInter(startY, endY, startX, endX, getCurInter = {main, other -> getInter(other, main)})
 
 
     private fun checkInter(mainStart: Int, mainEnd: Int,
                            otherStart: Int, otherEnd: Int,
-                           getCurInter: (Int, Int) -> (Pair<Item, Int>?)): Pair<Item, Int> {
+                           getCurInter: (Int, Int) -> (Pair<Item, VectorInt>?)): ArrayList<Pair<Item, VectorInt>> {
+        val res = ArrayList<Pair<Item, VectorInt>>()
         val mStart = min(mainStart, mainEnd)
         val mEnd = max(mainStart, mainEnd)
         (mStart .. mEnd).forEach { main ->
             (otherStart .. otherEnd).forEach { other ->
                 val inter = getCurInter(main, other)
-                if (inter != null) return inter
+                if (inter != null) res.add(inter)
             }
         }
-        return Pair(Item("", IType.EMPTY), -1)
+        return res
     }
 
-    private fun getInter(x: Int, y: Int, current: Int) = when(currentLevel.getType(x, y)) {
-        IType.SOLID -> Pair(currentLevel.getItem(x, y), current)
+    private fun getInter(x: Int, y: Int) = when(currentLevel.getType(x, y)) {
+        IType.SOLID -> Pair(currentLevel.getItem(x, y), VectorInt(x, y))
         IType.EMPTY -> {
             if (currentLevel.getItem(x, y).movables.isNotEmpty())
-                Pair(currentLevel.getItem(x, y), current)
+                Pair(currentLevel.getItem(x, y), VectorInt(x, y))
             else null
         }}
 

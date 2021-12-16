@@ -6,7 +6,9 @@ import gameInstances.states.enums.VertState
 import gameInstances.states.MState
 import graphicInstances.VectorD
 import graphicInstances.Size
+import graphicInstances.VectorInt
 import kotlin.math.abs
+import kotlin.math.sign
 
 open class Movable(name: String, type: IType,
                    val halfSize : Size, var pos: VectorD,
@@ -26,11 +28,14 @@ open class Movable(name: String, type: IType,
 
     fun checkFall(world: World) {
         world.clearPoses(this)
-        val floorTile = getFloorTile(world)
-        if (state.vertState != VertState.JUMPING || speed.y.equals(0.0)) {
-            when (floorTile.type) {
+        val floorTiles = getFloorTiles(world)
+        if ((state.vertState != VertState.JUMPING || speed.y.equals(0.0)) &&
+                state.vertState != VertState.NOT_FALLING) {
+            if (floorTiles.isEmpty())
+                checkFallTileEmpty(floorTiles)
+            else when (floorTiles[0].first.type) {
                 IType.SOLID -> stopFall()
-                IType.EMPTY -> checkFallTileEmpty(floorTile)
+                IType.EMPTY -> checkFallTileEmpty(floorTiles)
             }
         }
         world.fillPoses(this)
@@ -45,15 +50,23 @@ open class Movable(name: String, type: IType,
         state.vertState = VertState.FALLING
     }
 
-    private fun checkFallTileEmpty(floorTile: Item) {
-        if (floorTile.movables.isEmpty())
+    private fun checkFallTileEmpty(floorTiles: ArrayList<Pair<Item, VectorInt>>) {
+        if (floorTiles.isEmpty())
             startFall()
-        else hitMovableFalling(floorTile.movables, hitAct = {stopFall()}, freeAct = {startFall()})
+        else {
+            val movables = ArrayList<Movable>()
+            floorTiles.forEach { (item, _) ->
+                item.movables.forEach { movable -> if (!movables.contains(movable)) movables.add(movable) }
+            }
+            if (movables.isEmpty())
+                startFall()
+            else hitMovableFalling(movables, hitAct = { stopFall() }, freeAct = { startFall() })
+        }
     }
 
-    private fun getFloorTile(world: World) = world.checkInterY(
+    private fun getFloorTiles(world: World) = world.checkInterY(
             toMapX(getX(Dir.LEFT, false)), toMapX(getX(Dir.RIGHT, false)),
-            toMapY(getDownY(true)), toMapY(getDownY(true))).first
+            toMapY(getDownY(true)), toMapY(getDownY(true)))
 
     private fun moveX(hor: Dir, world: World) {
         val hPos = getHor(hor)
@@ -61,37 +74,47 @@ open class Movable(name: String, type: IType,
         val sXTile = toMapX(hPos)
         val sYTile = toMapY(getUpY(false))
         val eYTile = toMapY(getDownY(false))
-        val (inter, nearestTile) = world.checkInterX(sYTile, eYTile, sXTile, eXTile)
-        changeX(hor, inter, nearestTile)
+        val inters = world.checkInterX(sYTile, eYTile, sXTile, eXTile)
+        changeX(hor, inters)
     }
 
-    private fun changeX(hor: Dir, inter: Item, nearestTile: Int) {
-        when (inter.type) {
-            IType.EMPTY -> hitEmptyX(hor, inter, nearestTile)
-            IType.SOLID -> hitSolidX(hor, nearestTile)
+    private fun changeX(hor: Dir, inters: ArrayList<Pair<Item, VectorInt>>) {
+        if (inters.isEmpty())
+            hitEmptyX(hor, inters)
+        else when (inters[0].first.type) {
+            IType.EMPTY -> hitEmptyX(hor, inters)
+            IType.SOLID -> hitSolidX(hor, inters[0].second.x)
         }
     }
 
-    private fun hitEmptyX(hor: Dir, inter: Item, nearestTile: Int) {
-        if (nearestTile == -1)
+    private fun hitEmptyX(hor: Dir, inters: ArrayList<Pair<Item, VectorInt>>) {
+        if (inters.isEmpty())
             pos.x = pos.x + speed.x
-        else hitMovableX(hor, inter.movables)
+        else {
+            val movables = ArrayList<Movable>()
+            inters.forEach{ (item, _) ->
+                item.movables.forEach{ movable -> if (!movables.contains(movable)) movables.add(movable)}}
+            if (movables.isEmpty())
+                pos.x = pos.x + speed.x
+            else hitMovableX(hor, movables)
+        }
     }
 
     private fun hitMovableX(hor: Dir, others: ArrayList<Movable>) {
         val sign = hor.getValue()
-        var res = others[0]
+        var res: Movable? = null
         val otherDir = hor.getOpposite()
-        var resB = res.getX(otherDir, true)
+        var resB = Double.MAX_VALUE
         val border = getX(hor, true)
         others.indices.forEach { i ->
             val otherB = others[i].getX(otherDir, true)
-            if (hasInterY(others[i]) && sign * otherB < sign * resB) {
+            if (hasInterY(others[i]) && sign * border <= otherB * sign &&
+                    (res == null || sign * otherB < sign * resB)) {
                 res = others[i]
                 resB = otherB
             }
         }
-        if (hasInterY(res) && sign * (resB - border) < sign * speed.x) {
+        if (res != null && hasInterY(res as Movable) && sign * (resB - border) < sign * speed.x) {
             speed.x = 0.0
             pos.x = resB - sign * halfSize.width
         }
@@ -115,21 +138,30 @@ open class Movable(name: String, type: IType,
         val sYTile = toMapY(vPos)
         val sXTile = toMapX(getX(Dir.LEFT, false))
         val eXTile = toMapX(getX(Dir.RIGHT, false))
-        val (inter, nearestTile) = world.checkInterY(sXTile, eXTile, sYTile, eYTile)
-        changeY(inter, nearestTile)
+        val inters  = world.checkInterY(sXTile, eXTile, sYTile, eYTile)
+        changeY(inters)
     }
 
-    private fun changeY(inter: Item, nearestTile: Int) {
-        when (inter.type) {
-            IType.EMPTY -> hitEmptyY(inter, nearestTile)
-            IType.SOLID -> hitSolidY(nearestTile)
+    private fun changeY(inters: ArrayList<Pair<Item, VectorInt>>) {
+        if (inters.isEmpty())
+            hitEmptyY(inters)
+        else when (inters[0].first.type) {
+            IType.EMPTY -> hitEmptyY(inters)
+            IType.SOLID -> hitSolidY(inters[0].second.y)
         }
     }
 
-    private fun hitEmptyY(inter: Item, nearestTile: Int) {
-        if (nearestTile == -1)
+    private fun hitEmptyY(inters: ArrayList<Pair<Item, VectorInt>>) {
+        if (inters.isEmpty())
             pos.y = pos.y + speed.y
-        else hitMovableY(inter.movables)
+        else {
+            val movables = ArrayList<Movable>()
+            inters.forEach{ (item, _) ->
+                item.movables.forEach{ movable -> if (!movables.contains(movable)) movables.add(movable)}}
+            if (movables.isEmpty())
+                pos.y = pos.y + speed.y
+            else hitMovableY(movables)
+        }
     }
 
     private fun hitMovableY(others: ArrayList<Movable>) {
@@ -138,6 +170,13 @@ open class Movable(name: String, type: IType,
             VertState.FALLING -> hitMovableFalling(others,
                     hitAct = { resB -> hitMovableAct(resB) },
                     freeAct = { pos.y += speed.y})
+            VertState.NOT_FALLING -> when {
+                speed.y > 0 -> hitMovableFalling(others,
+                        hitAct = { resB -> hitMovableAct(resB) },
+                        freeAct = { pos.y += speed.y})
+                speed.y < 0 -> hitMovableJumping(others)
+                else -> {}
+            }
             else -> {}
         }
     }
@@ -145,7 +184,7 @@ open class Movable(name: String, type: IType,
         hitMovableY(others,
                 getOtherBorder = { other -> other.getDownY(true) },
                 getThisBorder = { cur -> cur.getUpY(true) },
-                finalCond = {resB, border -> border - resB <= -speed.y},
+                finalCond = {resB, border -> border - resB < -speed.y},
                 hitAct = { resB -> hitMovableAct(resB)},
                 freeAct = {pos.y += speed.y})
     }
@@ -160,36 +199,47 @@ open class Movable(name: String, type: IType,
     }
 
     private fun hitMovableAct(resB: Double) {
-        speed.y = 0.0
-        pos.y = resB + state.vertState.getValue() * halfSize.height
+        when(state.vertState) {
+            VertState.NOT_FALLING -> pos.y = resB - sign(speed.y) * halfSize.height
+            else -> {
+                speed.y = 0.0
+                pos.y = resB + state.vertState.getValue() * halfSize.height
+            }
+        }
     }
 
     private fun hitMovableY(others: ArrayList<Movable>, getOtherBorder: (Movable) -> Double,
                             getThisBorder: (Movable) -> Double,
                             finalCond: (Double, Double) -> Boolean,
                             hitAct: (Double) -> Unit, freeAct: () -> Unit) {
-        val sign = state.vertState.getValue()
-        var res = others[0]
-        var resB = getOtherBorder(res)
+        val sign = if (state.vertState != VertState.NOT_FALLING) state.vertState.getValue() else -1 * sign(speed.y)
+        var res: Movable? = null
+        var resB = Double.MAX_VALUE
         val border = getThisBorder(this)
         others.indices.forEach { i ->
             val otherB = getOtherBorder(others[i])
-            if (hasInterX(others[i]) && sign * otherB > sign * resB) {
+            if (sign * border >= sign * otherB && hasInterX(others[i]) &&
+                    (res == null || sign * otherB > sign * resB)) {
                 res = others[i]
                 resB = otherB
             }
         }
-        if (hasInterX(res) && finalCond(resB, border))
+        if (res != null && hasInterX(res as Movable) && finalCond(resB, border))
             hitAct(resB)
         else freeAct()
     }
 
-    private fun hasInterX(other: Movable) = abs(pos.x - other.pos.x) < halfSize.width + other.halfSize.width
+    private fun hasInterX(other: Movable) = abs(pos.x  - other.pos.x) < halfSize.width + other.halfSize.width
 
     private fun hitSolidY(nearestTile: Int) {
-        speed.y = 0.0
+        if (state.vertState != VertState.NOT_FALLING)
+            speed.y = 0.0
         pos.y = when(state.vertState) {
             VertState.JUMPING -> (nearestTile.toDouble() + 1) * tile.height + halfSize.height
+            VertState.NOT_FALLING -> when {
+                speed.y < 0 -> (nearestTile.toDouble() + 1) * tile.height + halfSize.height
+                else -> nearestTile.toDouble() * tile.height - halfSize.height
+            }
             else -> nearestTile.toDouble() * tile.height - halfSize.height
         }
     }
@@ -213,6 +263,7 @@ open class Movable(name: String, type: IType,
         VertState.STANDING -> getVPStanding(vert)
         VertState.JUMPING -> getVPJumping()
         VertState.FALLING -> getVPFalling()
+        VertState.NOT_FALLING -> getVPNotFalling(vert)
     }
 
     //VP = Vertical Position
@@ -248,6 +299,22 @@ open class Movable(name: String, type: IType,
         return getDownY(true)
     }
 
+    private fun getVPNotFalling(vert: Dir) = when(vert) {
+        Dir.JUMP -> {
+            speed.y = -accel.y
+            getUpY(true)
+        }
+        Dir.DOWN -> {
+            speed.y = accel.y
+            getDownY(true)
+        }
+        else -> {
+            if (speed.y > 0)
+                getDownY(true)
+            else getUpY(true)
+        }
+    }
+
     fun getUpY(withBorder: Boolean) = pos.y - halfSize.height + if (withBorder) 0 else 1
     fun getDownY(withBorder: Boolean) = pos.y + halfSize.height - if (withBorder) 0 else 1
     fun getX(hor: Dir, withBorder: Boolean) = pos.x + hor.getValue() * halfSize.width -
@@ -255,4 +322,9 @@ open class Movable(name: String, type: IType,
 
     private fun toMapX(pos: Double) = pos.toInt() / tile.width
     private fun toMapY(pos: Double) = pos.toInt() / tile.height
+
+    fun isPointIn(point: VectorInt) = getX(Dir.LEFT, true).toInt() <= point.x &&
+            point.x <= getX(Dir.RIGHT, true).toInt() &&
+            getUpY(true).toInt() <= point.y &&
+            point.y <= getDownY(true).toInt()
 }
