@@ -5,10 +5,9 @@ import gameInstances.World
 import gameInstances.states.ActionKeys
 import gameInstances.states.enums.Dir
 import graphicInstances.Size
-import java.awt.event.ActionEvent
-import java.awt.event.KeyAdapter
-import java.awt.event.KeyEvent
+import graphicInstances.VectorInt
 import java.awt.*
+import java.awt.event.*
 import javax.swing.AbstractAction
 import javax.swing.JPanel
 import javax.swing.Timer
@@ -16,7 +15,8 @@ import kotlin.system.exitProcess
 
 
 class Controller : JPanel() {
-    var actions = ActionKeys(Dir.NO, Dir.NO, isActing = false, isMap = false)
+    var actions = ActionKeys(Dir.NO, Dir.NO, isActing = false, isMap = false,
+            mousePos = VectorInt(0, 0), mouseClicked = false)
     val keys = HashSet<Int>()
     val world = World(Size(20, 20))
     var clear = false
@@ -33,6 +33,7 @@ class Controller : JPanel() {
                 actions.vert = getVertDir()
                 actions.isActing = getAct()
                 world.update(actions)
+                actions.mouseClicked = false
                 invalidate()
                 repaint()
             }
@@ -45,6 +46,8 @@ class Controller : JPanel() {
         br = false
         timer.start()
         addKL()
+        addMML()
+        addML()
     }
 
     private fun addKL() {
@@ -63,6 +66,22 @@ class Controller : JPanel() {
         })
     }
 
+    private fun addMML() {
+        addMouseMotionListener(object : MouseMotionAdapter() {
+            override fun mouseMoved(e: MouseEvent) {
+                actions.mousePos = VectorInt(e.xOnScreen, e.yOnScreen)
+            }
+        })
+    }
+
+    private fun addML() {
+        addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent?) {
+                actions.mouseClicked = true
+            }
+        })
+    }
+
     fun clearTrail() {
         if (KeyEvent.VK_P in keys) {
             t = false
@@ -72,7 +91,7 @@ class Controller : JPanel() {
         }
     }
 
-    fun checkBr() = KeyEvent.VK_SPACE in keys
+    fun checkBr() = KeyEvent.VK_K in keys
 
     fun getHorDir() : Dir {
         return when {
@@ -128,6 +147,7 @@ class Controller : JPanel() {
             val pos = (elem.pos - elem.halfSize).toInt()
 //            g2?.drawOval(pos.x, pos.y, size.width, size.height)
             g2?.drawRect(pos.x, pos.y, size.width, size.height)
+//            g2?.drawString(elem.state.vertState.toString(), pos.x, pos.y + size.height + 10)
         }
     }
 
@@ -138,6 +158,7 @@ class Controller : JPanel() {
         val pos = (character.pos - character.halfSize).toInt()
 //        g2?.drawOval(pos.x, pos.y, size.width, size.height)
         g2?.drawRect(pos.x, pos.y, size.width, size.height)
+//        g2?.drawString(character.state.vertState.toString(), pos.x, pos.y + size.height + 10)
 
         g2?.color = Color.BLACK
         g2?.fillRect(400, 400, 600, 600)
@@ -145,6 +166,8 @@ class Controller : JPanel() {
         g2?.drawString(character.pos.toString(), 500, 500)
         g2?.drawString(character.pos.toInt().toString(), 500, 600)
         g2?.drawString((character.pos.toInt() / world.tile.width).toString(), 500, 700)
+//        g2?.drawString(actions.mousePos.toString(), 500, 670)
+//        g2?.drawString(world.activeMovable.toString(), 500, 650)
     }
 }
 
