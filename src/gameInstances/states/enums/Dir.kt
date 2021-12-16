@@ -7,9 +7,17 @@ enum class Dir {
     DOWN,
     NO;
 
-    fun getValue(): Int = when(this) {
-        RIGHT, DOWN -> 1
-        LEFT, JUMP -> -1
-        else -> 0
+    fun getValue(): Double = when(this) {
+        RIGHT, DOWN -> 1.0
+        LEFT, JUMP -> -1.0
+        else -> 0.0
+    }
+
+    fun getOpposite() = when(this) {
+        RIGHT -> LEFT
+        LEFT -> RIGHT
+        DOWN -> JUMP
+        JUMP -> DOWN
+        NO -> NO
     }
 }

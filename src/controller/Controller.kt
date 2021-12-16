@@ -101,6 +101,7 @@ class Controller : JPanel() {
         }
 
         drawMap(g2)
+        drawMovable(g2)
         drawCharacter(g2)
     }
 
@@ -116,9 +117,18 @@ class Controller : JPanel() {
             if (!t) {
                 g2?.fillRect(x * width, y * height, width, height)
             }
-        }
-        }
+        }}
 //        t = true
+    }
+
+    private fun drawMovable(g2: Graphics2D?) {
+        for (elem in world.currentLevel.movable) {
+            val size = elem.halfSize * 2
+            g2?.color = Color.getHSBColor(0.3f, 0.7f, 0.45f)
+            val pos = (elem.pos - elem.halfSize).toInt()
+//            g2?.drawOval(pos.x, pos.y, size.width, size.height)
+            g2?.drawRect(pos.x, pos.y, size.width, size.height)
+        }
     }
 
     private fun drawCharacter(g2: Graphics2D?) {
@@ -126,7 +136,7 @@ class Controller : JPanel() {
         val size = character.halfSize * 2
         g2?.color = Color.cyan
         val pos = (character.pos - character.halfSize).toInt()
-        g2?.drawOval(pos.x, pos.y, size.width, size.height)
+//        g2?.drawOval(pos.x, pos.y, size.width, size.height)
         g2?.drawRect(pos.x, pos.y, size.width, size.height)
 
         g2?.color = Color.BLACK
