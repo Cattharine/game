@@ -8,6 +8,8 @@ import graphicInstances.VectorD
 import graphicInstances.Size
 import graphicInstances.VectorInt
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.sign
 
 open class Movable(name: String, type: IType,
@@ -301,11 +303,11 @@ open class Movable(name: String, type: IType,
 
     private fun getVPNotFalling(vert: Dir) = when(vert) {
         Dir.JUMP -> {
-            speed.y = -accel.y
+            speed.y = -accel.y * 2.0
             getUpY(true)
         }
         Dir.DOWN -> {
-            speed.y = accel.y
+            speed.y = accel.y * 2.0
             getDownY(true)
         }
         else -> {

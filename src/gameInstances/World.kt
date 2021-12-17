@@ -13,7 +13,6 @@ import kotlin.math.min
 class World(val tile : Size) {
     val currentLevel = Level(tile)
     val character = Character(Size(9, 9), VectorD(190.0, 270.0), tile)
-    var activeMovable : Movable? = null
 
     fun update(actions: ActionKeys) {
         for (elem in currentLevel.movable) {
@@ -22,28 +21,14 @@ class World(val tile : Size) {
         }
         character.checkFall(this)
         changeActive(actions)
-        character.act(activeMovable, actions, this)
+        character.act(actions, this)
     }
 
     private fun changeActive(actions: ActionKeys) {
-        if (actions.mouseClicked && activeMovable == null) {
+        if (actions.mouseClicked) {
             val pos = VectorInt(actions.mousePos.x / tile.width, actions.mousePos.y / tile.height)
             val item = currentLevel.tryGetItem(pos.x, pos.y)
-            when(item?.type) {
-                IType.EMPTY -> when {
-                    item.movables.isEmpty() -> {}
-                    else -> {
-                        item.movables.forEach { movable ->
-                            if (movable.isPointIn(actions.mousePos) && !movable.state.isActive){
-                                activeMovable = movable
-                                movable.state.vertState = VertState.NOT_FALLING
-                            }}}
-                }
-                else -> {}
-            }
-        } else if (actions.mouseClicked) {
-            activeMovable?.state?.vertState = VertState.FALLING
-            activeMovable = null
+            character.setMovable(item, actions)
         }
     }
 
