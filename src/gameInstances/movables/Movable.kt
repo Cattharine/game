@@ -14,7 +14,7 @@ import kotlin.math.sign
 
 open class Movable(name: String, type: IType,
                    var halfSize : Size, var pos: VectorD,
-                   private val tile: Size,
+                   val tile: Size,
                    isAvailable: Boolean = true,
                    initialVertState: VertState = VertState.STANDING) : Item(name, type) {
     var speed: VectorD = VectorD(0.0, 0.0)

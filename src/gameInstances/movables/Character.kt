@@ -20,18 +20,30 @@ class Character(halfSize:Size, pos: VectorD, tile: Size, private val minSize: Si
 
     fun act(actions: ActionKeys, world: World) {
         if (movable == null) {
-            counter--
-            if (counter == 0) {
-                val prevPos = getDownY(true)
-                halfSize = halfSize.min(dif * (-1), maxSize)
-                counter = maxCounter
-                pos.y = prevPos - halfSize.y
+            regainSize()
+            if (!actions.teleporting)
+                usualMove(actions, world)
+            else {
+                tryToTeleport(actions, world)
             }
-            move(actions.hor, actions.vert, world)
         }
         else {
             move(Dir.NO, Dir.NO, world)
             movable?.move(actions.hor, actions.vert, world)
+        }
+    }
+
+    private fun usualMove(actions: ActionKeys, world: World) {
+        move(actions.hor, actions.vert, world)
+    }
+
+    private fun regainSize() {
+        counter--
+        if (counter == 0) {
+            val prevPos = getDownY(true)
+            halfSize = halfSize.min(dif * (-1), maxSize)
+            counter = maxCounter
+            pos.y = prevPos - halfSize.y
         }
     }
 
@@ -58,5 +70,18 @@ class Character(halfSize:Size, pos: VectorD, tile: Size, private val minSize: Si
     private fun releaseMovable() {
         movable?.state?.vertState = VertState.FALLING
         movable = null
+    }
+
+    private fun tryToTeleport(actions: ActionKeys, world: World) {
+        if (state.vertState == VertState.STANDING) {
+            val pos = VectorInt(actions.mousePos.x / tile.width, actions.mousePos.y / tile.height)
+            val item = world.currentLevel.tryGetItem(pos.x, pos.y)
+            when {
+                item?.type == IType.EMPTY && !item.hasSolidMovables() ->
+                    this.pos = VectorD((pos.x * tile.width).toDouble() + halfSize.x,
+                            (pos.y * tile.height).toDouble() + halfSize.y)
+                else -> usualMove(actions, world)
+            }
+        }
     }
 }
