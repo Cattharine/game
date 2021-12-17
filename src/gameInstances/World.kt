@@ -1,9 +1,10 @@
 package gameInstances
 
+import gameInstances.movables.Character
+import gameInstances.movables.Movable
 import gameInstances.states.ActionKeys
 import gameInstances.states.enums.Dir
 import gameInstances.states.enums.IType
-import gameInstances.states.enums.VertState
 import graphicInstances.Size
 import graphicInstances.VectorD
 import graphicInstances.VectorInt
@@ -12,38 +13,37 @@ import kotlin.math.min
 
 class World(val tile : Size) {
     val currentLevel = Level(tile)
-    val character = Character(Size(9, 9), VectorD(190.0, 270.0), tile)
-    var activeMovable : Movable? = null
+    val character = Character(Size(9, 9), VectorD(190.0, 270.0), tile, Size(5, 5))
 
     fun update(actions: ActionKeys) {
+        checkMechs(actions)
+        checkMWalls()
         for (elem in currentLevel.movable) {
             elem.checkFall(this)
             elem.move(Dir.NO, Dir.NO, this)
         }
         character.checkFall(this)
         changeActive(actions)
-        character.act(activeMovable, actions, this)
+        character.act(actions, this)
+    }
+
+    private fun checkMWalls() {
+        for (elem in currentLevel.movableWalls) {
+            elem.check(this)
+        }
+    }
+
+    private fun checkMechs(actions: ActionKeys) {
+        for (elem in currentLevel.mechs) {
+            elem.check(this, actions, character)
+        }
     }
 
     private fun changeActive(actions: ActionKeys) {
-        if (actions.mouseClicked && activeMovable == null) {
+        if (actions.mouseClicked) {
             val pos = VectorInt(actions.mousePos.x / tile.width, actions.mousePos.y / tile.height)
             val item = currentLevel.tryGetItem(pos.x, pos.y)
-            when(item?.type) {
-                IType.EMPTY -> when {
-                    item.movables.isEmpty() -> {}
-                    else -> {
-                        item.movables.forEach { movable ->
-                            if (movable.isPointIn(actions.mousePos) && !movable.state.isActive){
-                                activeMovable = movable
-                                movable.state.vertState = VertState.NOT_FALLING
-                            }}}
-                }
-                else -> {}
-            }
-        } else if (actions.mouseClicked) {
-            activeMovable?.state?.vertState = VertState.FALLING
-            activeMovable = null
+            character.setMovable(item, actions)
         }
     }
 
@@ -75,7 +75,9 @@ class World(val tile : Size) {
             if (currentLevel.getItem(x, y).movables.isNotEmpty())
                 Pair(currentLevel.getItem(x, y), VectorInt(x, y))
             else null
-        }}
+        }
+        IType.MECHANISM -> null
+    }
 
     fun clearPoses(movable: Movable) = updatePoses(movable, action = { list, elem -> list.remove(elem) })
 
