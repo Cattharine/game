@@ -9,6 +9,10 @@ import gameInstances.states.enums.VertState
 import graphicInstances.Size
 import graphicInstances.VectorD
 import graphicInstances.VectorInt
+import java.lang.Math.pow
+import java.lang.Math.sqrt
+import kotlin.math.abs
+import kotlin.math.pow
 
 class Character(halfSize:Size, pos: VectorD, tile: Size, private val minSize: Size) :
         Movable("character", IType.SOLID, halfSize, pos, tile,false) {
@@ -17,6 +21,7 @@ class Character(halfSize:Size, pos: VectorD, tile: Size, private val minSize: Si
     private val maxCounter = 1000
     private var counter = maxCounter
     private val maxSize = halfSize
+    var maxDist = 120.0
 
     fun act(actions: ActionKeys, world: World) {
         if (movable == null) {
@@ -30,8 +35,14 @@ class Character(halfSize:Size, pos: VectorD, tile: Size, private val minSize: Si
             }
         }
         else {
+            var mov = movable as Movable
             move(Dir.NO, Dir.NO, world)
+            val prevPos = VectorD(mov.pos.x, mov.pos.y)
             movable?.move(actions.hor, actions.vert, world)
+            mov = movable as Movable
+            if ((abs(mov.pos.x - pos.x)).pow(2.0) +
+                    (abs(mov.pos.y - pos.y)).pow(2.0) > maxDist.pow(2))
+                movable?.pos = prevPos
         }
     }
 

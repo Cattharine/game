@@ -318,11 +318,11 @@ open class Movable(name: String, type: IType,
 
     private fun getVPNotFalling(vert: Dir) = when(vert) {
         Dir.JUMP -> {
-            speed.y = -accel.y * 2.0
+            speed.y = -accel.y * 3.0
             getUpY(true)
         }
         Dir.DOWN -> {
-            speed.y = accel.y * 2.0
+            speed.y = accel.y * 4.0
             getDownY(true)
         }
         else -> {

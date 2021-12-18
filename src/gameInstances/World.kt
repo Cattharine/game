@@ -19,8 +19,10 @@ class World(val tile : Size) {
         checkMechs(actions)
         checkMWalls()
         for (elem in currentLevel.movable) {
-            elem.checkFall(this)
-            elem.move(Dir.NO, Dir.NO, this)
+            if (elem != character.movable) {
+                elem.checkFall(this)
+                elem.move(Dir.NO, Dir.NO, this)
+            }
         }
         character.checkFall(this)
         changeActive(actions)
@@ -97,14 +99,6 @@ class World(val tile : Size) {
         }
     }
 
-    fun canTeleportTo(realPos: VectorInt): Boolean {
-        val pos = VectorInt(realPos.x / tile.width, realPos.y / tile.height)
-        val item = currentLevel.tryGetItem(pos.x, pos.y)
-        return if (item == null)
-            false
-        else currentLevel.areas[item.areaNum].isChecked
-    }
-
     fun canTeleportTo(item: Item?) = item!= null && currentLevel.areas[item.areaNum].isChecked
 
     private fun getMapX(movable: Movable) = Pair(getMapX(movable.getX(Dir.LEFT, true)),
@@ -115,4 +109,7 @@ class World(val tile : Size) {
 
     private fun getMapX(pos: Double) = pos.toInt() / tile.width
     private fun getMapY(pos: Double) = pos.toInt() / tile.height
+
+    fun getSizeOfCurrentLevel() = Size(currentLevel.map[0].size * tile.width,
+            currentLevel.map.size * tile.height)
 }

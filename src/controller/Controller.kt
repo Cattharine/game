@@ -12,6 +12,9 @@ import java.awt.event.*
 import javax.swing.AbstractAction
 import javax.swing.JPanel
 import javax.swing.Timer
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.system.exitProcess
 
 class Controller : JPanel() {
@@ -19,6 +22,9 @@ class Controller : JPanel() {
             mousePos = VectorInt(0, 0), mouseClicked = false, teleporting = false)
     val keys = HashSet<Int>()
     val world = World(Size(20, 20))
+    var offset = VectorInt(0 ,0)
+    var outScreenX = true
+    var outScreenY = true
 
     private val timer = Timer(10, object : AbstractAction() {
         override fun actionPerformed(e: ActionEvent) {
@@ -67,7 +73,8 @@ class Controller : JPanel() {
     private fun addMML() {
         addMouseMotionListener(object : MouseMotionAdapter() {
             override fun mouseMoved(e: MouseEvent) {
-                actions.mousePos = VectorInt(e.xOnScreen, e.yOnScreen)
+                actions.mousePos = VectorInt(e.xOnScreen - (if (outScreenX) -1 else 1) * offset.x,
+                        e.yOnScreen - (if (outScreenY) -1 else 1) * offset.y)
             }
         })
     }
@@ -106,11 +113,7 @@ class Controller : JPanel() {
         g2?.fillRect(0, 0, width, height)
 
         if (!actions.isMap) {
-            drawMapAll(g2)
-            drawMovable(g2)
-            drawMechanisms(g2)
-            drawMovableWalls(g2)
-            drawCharacter(g2)
+            drawGameField(g2)
         }
         else {
             drawMap(g2)
@@ -118,7 +121,34 @@ class Controller : JPanel() {
         }
     }
 
+    private fun drawGameField(g2: Graphics2D?) {
+        setOffset()
+
+        drawMapAll(g2)
+        drawMovable(g2)
+        drawMechanisms(g2)
+        drawMovableWalls(g2)
+        drawCharacter(g2)
+    }
+
+    private fun setOffset() {
+        val levelSize = world.getSizeOfCurrentLevel()
+        val charPos = world.character.pos.toInt()
+        outScreenX = levelSize.width > width
+        outScreenY = levelSize.height > height
+        val offsetX = when {
+            outScreenX -> max(0, min(charPos.x - width / 2, levelSize.width - width))
+            else -> width / 2 - levelSize.width / 2
+        }
+        val offsetY = when {
+            outScreenY -> max(0, min(charPos.y - height / 2, levelSize.height - height))
+            else -> height / 2 - levelSize.height / 2
+        }
+        offset = VectorInt(offsetX, offsetY)
+    }
+
     private fun drawMap(g2: Graphics2D?) {
+        //для каждого уровня
         val map = world.currentLevel.map
         val areas = world.currentLevel.areas
         val width = world.tile.width
@@ -145,7 +175,9 @@ class Controller : JPanel() {
                 IType.SOLID -> g2?.color = Color.GRAY
                 else -> g2?.color = Color.BLACK
             }
-            g2?.fillRect(x * width, y * height, width, height)
+            g2?.fillRect(x * width + (if (outScreenX) -1 else 1) * offset.x,
+                    y * height + (if (outScreenY) -1 else 1) * offset.y, width, height)
+//            g2?.drawString("${x * width + if (outScreenX) -1 else 1 * offset.x}, ${y }")
         }}
     }
 
@@ -173,6 +205,7 @@ class Controller : JPanel() {
         val size = elem.halfSize * 2
         g2?.color = color
         val pos = (elem.pos - elem.halfSize).toInt()
-        g2?.drawRect(pos.x, pos.y, size.width, size.height)
+        g2?.drawRect(pos.x + (if (outScreenX) -1 else 1) * offset.x,
+                pos.y + (if (outScreenY) -1 else 1) * offset.y, size.width, size.height)
     }
 }
