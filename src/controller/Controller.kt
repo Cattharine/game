@@ -110,6 +110,7 @@ class Controller : JPanel() {
     override fun paint(g: Graphics?) {
         val g2 = g as Graphics2D?
 
+        g2?.color = if(actions.isMap) Color.getHSBColor(0.56f, 0.6f, 0.1f) else Color.GRAY
         g2?.fillRect(0, 0, width, height)
 
         if (!actions.isMap) {
@@ -188,7 +189,7 @@ class Controller : JPanel() {
 
     private fun drawMechanisms(g2: Graphics2D?) {
         world.currentLevel.mechanisms
-            .forEach { drawElem(g2, Color.getHSBColor(0.17f, 0.7f, 0.9f), it) }
+            .forEach { drawElem(g2, if (it.isActive) Color.green else Color.red, it) }
     }
 
     private fun drawMovable(g2: Graphics2D?) {

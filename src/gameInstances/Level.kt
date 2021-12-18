@@ -72,9 +72,9 @@ class Level(tile: Size) {
         mechanisms.add(Mechanism(Size(10, 1), VectorD(330.0, 39.0), tile))
         mechanisms.add(Mechanism(Size(10, 1), VectorD(30.0, 59.0), tile))
 
-        movableWalls[0].movables.add(mechanisms[0])
-        movableWalls[1].movables.add(mechanisms[0])
-        movableWalls[2].movables.add(mechanisms[1])
+        movableWalls[0].addMechanism(mechanisms[0]) { bool -> bool }
+        movableWalls[1].addMechanism(mechanisms[0]) { bool -> !bool }
+        movableWalls[2].addMechanism(mechanisms[1]) { bool -> !bool }
     }
 
     fun getType(x: Int, y: Int) = map[y][x].type
