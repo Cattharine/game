@@ -9,48 +9,68 @@ import graphicInstances.VectorD
 import graphicInstances.VectorInt
 
 class Level(tile: Size) {
-    private val lines = arrayOf("s|s|s|s|s|s|s|s|s|s|s|s|s|s|s|s|s|s|s|s",
-                                "s| | | | |s| | |s| | | |s| | | | | | |s",
-                                "s| | | | | | | | | |s|s| | | | |s| | |s",
-                                "s|s| | | | | |s|s| |s| | | | | | | |s|s",
-                                "s| | | |s|s|s| |s| |s| | | | |s| | | |s",
-                                "s|s| | | | | | |s| |s|s| | | | | |s| |s",
-                                "s| | | | | | | | | | | | | | | | | | |s",
-                                "s|s|s|s|s|s|s|s|s|s|s|s|s|s|s|s|s|s| |s",
-                                "s| | | | | | | | | | | | | | | | | | |s",
-                                "s| | | | | | | | | | | | | | | | | |s|s",
-                                "s| | | | | | | | | | | | | | | | | | |s",
-                                "s| | | | | | | | | | | | | | | | | |s|s",
-                                "s| | | | | | | | | | | | | | | | | | |s",
-                                "s| | | | | | | | | | | | | | | | | | |s",
-                                "s|s|s|s|s|s|s|s|s|s|s|s|s|s|s|s|s|s|s|s")
+    private val lines = arrayOf(
+        "s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0",
+        "s0| 1| 1| 1| 1|s0| 1| 1|s0| 1| 1| 1|s0| 3| 3| 3| 3| 3| 3|s0",
+        "s0| 1| 1| 1| 1| 1| 1| 1| 1| 1|s0|s0| 3| 3| 3| 3|s0| 3| 3|s0",
+        "s0|s0| 1| 1| 1| 1| 1|s0|s0| 2|s0| 3| 3| 3| 3| 3| 3| 3|s0|s0",
+        "s0| 1| 1| 1|s0|s0|s0| 1|s0| 2|s0| 3| 3| 3| 3|s0| 3| 3| 3|s0",
+        "s0|s0| 1| 1| 1| 1| 1| 1|s0| 2|s0|s0| 3| 3| 3| 3| 3|s0| 3|s0",
+        "s0| 1| 1| 1| 1| 1| 1| 1| 1| 2| 2| 3| 3| 3| 3| 3| 3| 3| 3|s0",
+        "s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0| 3|s0",
+        "s0| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4|s0",
+        "s0| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4|s0|s0",
+        "s0| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4|s0",
+        "s0| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4|s0|s0",
+        "s0| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4|s0",
+        "s0| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4|s0",
+        "s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0|s0")
     val map : List<List<Item>>
     val movable : ArrayList<Movable>
     val movableWalls: ArrayList<MovableWall>
+    val areaNum = 5
     val mechs: ArrayList<Mech>
+    val areas: Array<Area>
     init {
+        areas = Array(areaNum) {Area(-1)}
         map = lines.map { it
             .split("|")
-            .map {char -> when(char) {
-                "s" -> Item("", IType.SOLID)
-                " " -> Item("", IType.EMPTY)
-                else -> Item("", IType.EMPTY)
+            .map {char -> val area = Area(Integer.parseInt(char[1].toString()))
+                if (areas[area.number].number == -1)
+                    areas[area.number] = area
+                when(char[0]) {
+                's' -> Item("", IType.SOLID, area.number)
+                ' ' -> Item("", IType.EMPTY, area.number)
+                else -> Item("", IType.EMPTY, area.number)
             }}}
         movable = ArrayList()
-        movable.add(Movable("", IType.SOLID, Size(50, 15),
-                VectorD(180.0, 185.0), tile))
-        movable.add(Movable("", IType.SOLID, Size(8, 8),
-                VectorD(190.0, 160.0), tile))
+        initializeMovables(tile)
         movableWalls = ArrayList()
-        movableWalls.add(MovableWall(Size(10, 10), VectorD(210.0, 130.0),
-                tile, Size(0, 0), VectorInt(0, 1)))
-        movableWalls.add(MovableWall(Size(10, 10), VectorD(170.0, 130.0),
-                tile, Size(0,0), VectorInt(0, 1)))
-        movableWalls.add(MovableWall(Size(10, 10), VectorD(190.0, 70.0),
-                tile, Size(0, 0), VectorInt(1, 0)))
+        initializeMMovables(tile)
         mechs = ArrayList()
+        initializeMechs(tile)
+    }
+
+    private fun initializeMovables(tile: Size) {
+        movable.add(Movable("", IType.SOLID, Size(50, 15),
+            VectorD(180.0, 185.0), tile))
+        movable.add(Movable("", IType.SOLID, Size(8, 8),
+            VectorD(190.0, 160.0), tile))
+    }
+
+    private fun initializeMMovables(tile: Size) {
+        movableWalls.add(MovableWall(Size(10, 10), VectorD(210.0, 130.0),
+            tile, Size(0, 0), VectorInt(0, 1)))
+        movableWalls.add(MovableWall(Size(10, 10), VectorD(170.0, 130.0),
+            tile, Size(0,0), VectorInt(0, 1)))
+        movableWalls.add(MovableWall(Size(10, 10), VectorD(190.0, 70.0),
+            tile, Size(0, 0), VectorInt(1, 0)))
+    }
+
+    private fun initializeMechs(tile: Size) {
         mechs.add(Mech(Size(10, 1), VectorD(330.0, 39.0), tile))
         mechs.add(Mech(Size(10, 1), VectorD(30.0, 59.0), tile))
+
         movableWalls[0].movables.add(mechs[0])
         movableWalls[1].movables.add(mechs[0])
         movableWalls[2].movables.add(mechs[1])

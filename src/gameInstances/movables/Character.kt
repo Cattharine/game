@@ -24,7 +24,9 @@ class Character(halfSize:Size, pos: VectorD, tile: Size, private val minSize: Si
             if (!actions.teleporting)
                 usualMove(actions, world)
             else {
+                world.clearPoses(this)
                 tryToTeleport(actions, world)
+                world.fillPoses(this)
             }
         }
         else {
@@ -63,8 +65,12 @@ class Character(halfSize:Size, pos: VectorD, tile: Size, private val minSize: Si
                 current.state.isAvailable && movable == null && halfSize != minSize) {
             movable = current
             current.state.vertState = VertState.NOT_FALLING
-            halfSize = halfSize.max(dif, minSize)
+            reduceSize()
         }
+    }
+
+    private fun reduceSize() {
+        halfSize = halfSize.max(dif, minSize)
     }
 
     private fun releaseMovable() {
@@ -77,9 +83,14 @@ class Character(halfSize:Size, pos: VectorD, tile: Size, private val minSize: Si
             val pos = VectorInt(actions.mousePos.x / tile.width, actions.mousePos.y / tile.height)
             val item = world.currentLevel.tryGetItem(pos.x, pos.y)
             when {
-                item?.type == IType.EMPTY && !item.hasSolidMovables() ->
-                    this.pos = VectorD((pos.x * tile.width).toDouble() + halfSize.x,
-                            (pos.y * tile.height).toDouble() + halfSize.y)
+                item?.type == IType.EMPTY && !item.hasSolidMovables() && halfSize != minSize &&
+                        world.canTeleportTo(item) -> {
+                    this.pos = VectorD(
+                        (pos.x * tile.width).toDouble() + halfSize.x,
+                        (pos.y * tile.height).toDouble() + halfSize.y
+                    )
+                    reduceSize()
+                }
                 else -> usualMove(actions, world)
             }
         }

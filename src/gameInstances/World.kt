@@ -81,7 +81,6 @@ class World(val tile : Size) {
 
     fun clearPoses(movable: Movable) = updatePoses(movable, action = { list, elem -> list.remove(elem) })
 
-
     fun fillPoses(movable: Movable) = updatePoses(movable, action = { list, elem -> list.add(elem) })
 
     private fun updatePoses(movable: Movable, action: (ArrayList<Movable>, Movable) -> Boolean) {
@@ -89,9 +88,24 @@ class World(val tile : Size) {
         val ceil = getMapUp(movable)
         val floor = getMapDown(movable)
         (left .. right).forEach { x ->
-            (ceil .. floor).forEach { y -> action(currentLevel.getItem(x, y).movables, movable) }
+            (ceil .. floor).forEach { y ->
+                val item = currentLevel.getItem(x, y)
+                if (movable.name == "character")
+                    currentLevel.areas[item.areaNum].isChecked = true
+                action(item.movables, movable)
+            }
         }
     }
+
+    fun canTeleportTo(realPos: VectorInt): Boolean {
+        val pos = VectorInt(realPos.x / tile.width, realPos.y / tile.height)
+        val item = currentLevel.tryGetItem(pos.x, pos.y)
+        return if (item == null)
+            false
+        else currentLevel.areas[item.areaNum].isChecked
+    }
+
+    fun canTeleportTo(item: Item?) = item!= null && currentLevel.areas[item.areaNum].isChecked
 
     private fun getMapX(movable: Movable) = Pair(getMapX(movable.getX(Dir.LEFT, true)),
             getMapX(movable.getX(Dir.RIGHT, false)))

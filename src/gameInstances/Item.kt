@@ -3,7 +3,7 @@ package gameInstances
 import gameInstances.movables.Movable
 import gameInstances.states.enums.IType
 
-open class Item(val name: String, val type: IType) {
+open class Item(val name: String, val type: IType, val areaNum: Int) {
     val movables = ArrayList<Movable>()
 
     fun hasSolidMovables(): Boolean {

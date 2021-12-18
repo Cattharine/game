@@ -18,7 +18,7 @@ open class Movable(name: String, type: IType,
                    var halfSize : Size, var pos: VectorD,
                    val tile: Size,
                    isAvailable: Boolean = true,
-                   initialVertState: VertState = VertState.STANDING) : Item(name, type) {
+                   initialVertState: VertState = VertState.STANDING) : Item(name, type, -1) {
     var speed: VectorD = VectorD(0.0, 0.0)
     val state = MState(isAvailable, initialVertState)
     val accel: VectorD = VectorD(2.5, 0.1)
