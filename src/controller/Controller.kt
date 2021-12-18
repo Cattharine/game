@@ -161,7 +161,8 @@ class Controller : JPanel() {
                 map[y][x].type == IType.SOLID -> g2?.color = Color.GRAY
                 else -> g2?.color = Color.BLACK
             }
-            g2?.fillRect(x * width, y * height, width, height)
+            g2?.fillRect(x * width + (if (outScreenX) -1 else 1) * offset.x,
+                    y * height + (if (outScreenY) -1 else 1) * offset.y, width, height)
         }}
 
     }
@@ -177,7 +178,6 @@ class Controller : JPanel() {
             }
             g2?.fillRect(x * width + (if (outScreenX) -1 else 1) * offset.x,
                     y * height + (if (outScreenY) -1 else 1) * offset.y, width, height)
-//            g2?.drawString("${x * width + if (outScreenX) -1 else 1 * offset.x}, ${y }")
         }}
     }
 
