@@ -23,7 +23,7 @@ class Controller : JPanel() {
     var t = false
     var br = false
 
-    private val timer = Timer(10, object : AbstractAction() {
+    val timer = Timer(10, object : AbstractAction() {
         override fun actionPerformed(e: ActionEvent) {
             br = checkBr()
             if (!br) {
@@ -31,7 +31,9 @@ class Controller : JPanel() {
                 clearTrail()
                 actions.hor = getHorDir()
                 actions.vert = getVertDir()
-                world.update(actions)
+                if (!actions.isMap) {
+                    world.update(actions)
+                }
                 actions.isActing = false
                 actions.mouseClicked = false
                 actions.teleporting = false
@@ -54,13 +56,15 @@ class Controller : JPanel() {
     private fun addKL() {
         addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
-                if (e.keyCode == KeyEvent.VK_ESCAPE) {
-                    isVisible = false
-                    exitProcess(0)
+                when (e.keyCode) {
+                    KeyEvent.VK_ESCAPE -> {
+                        isVisible = false
+                        exitProcess(0)
+                    }
+                    KeyEvent.VK_E -> actions.isActing = true
+                    KeyEvent.VK_M -> actions.isMap = !actions.isMap
+                    else -> keys.add(e.keyCode)
                 }
-                else if (e.keyCode == KeyEvent.VK_E)
-                    actions.isActing = true
-                else keys.add(e.keyCode)
             }
 
             override fun keyReleased(e: KeyEvent) {
@@ -121,15 +125,38 @@ class Controller : JPanel() {
 
         g2?.fillRect(0, 0, width, height)
 
-
-        drawMap(g2)
-        drawMovable(g2)
-        drawMechs(g2)
-        drawMovableWalls(g2)
-        drawCharacter(g2)
+        if (!actions.isMap) {
+            drawMapAll(g2)
+            drawMovable(g2)
+            drawMechs(g2)
+            drawMovableWalls(g2)
+            drawCharacter(g2)
+        }
+        else {
+            drawMap(g2)
+            drawCharacter(g2)
+        }
     }
 
     private fun drawMap(g2: Graphics2D?) {
+        val map = world.currentLevel.map
+        val areas = world.currentLevel.areas
+        val width = world.tile.width
+        val height = world.tile.height
+
+        map.indices.forEach { y -> map[y].indices.forEach { x ->
+            when {
+                !areas[map[y][x].areaNum].isChecked ->
+                    g2?.color = Color.getHSBColor(0.56f, 0.6f, 0.1f)
+                map[y][x].type == IType.SOLID -> g2?.color = Color.GRAY
+                else -> g2?.color = Color.BLACK
+            }
+            g2?.fillRect(x * width, y * height, width, height)
+        }}
+
+    }
+
+    private fun drawMapAll(g2: Graphics2D?) {
         val map = world.currentLevel.map
         val width = world.tile.width
         val height = world.tile.height
@@ -138,11 +165,8 @@ class Controller : JPanel() {
                 IType.SOLID -> g2?.color = Color.GRAY
                 else -> g2?.color = Color.BLACK
             }
-            if (!t) {
-                g2?.fillRect(x * width, y * height, width, height)
-            }
+            g2?.fillRect(x * width, y * height, width, height)
         }}
-//        t = true
     }
 
     private fun drawMovableWalls(g2: Graphics2D?) {
