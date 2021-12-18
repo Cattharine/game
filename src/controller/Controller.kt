@@ -16,10 +16,10 @@ import kotlin.system.exitProcess
 
 class Controller : JPanel() {
     var actions = ActionKeys(Dir.NO, Dir.NO, isActing = false, isMap = false,
-            mousePos = VectorInt(0, 0), mouseClicked = false)
+            mousePos = VectorInt(0, 0), mouseClicked = false, teleporting = false)
     val keys = HashSet<Int>()
     val world = World(Size(20, 20))
-    var clear = false
+    var clear = true
     var t = false
     var br = false
 
@@ -31,9 +31,10 @@ class Controller : JPanel() {
                 clearTrail()
                 actions.hor = getHorDir()
                 actions.vert = getVertDir()
-                actions.isActing = getAct()
                 world.update(actions)
+                actions.isActing = false
                 actions.mouseClicked = false
+                actions.teleporting = false
                 invalidate()
                 repaint()
             }
@@ -57,7 +58,9 @@ class Controller : JPanel() {
                     isVisible = false
                     exitProcess(0)
                 }
-                keys.add(e.keyCode)
+                else if (e.keyCode == KeyEvent.VK_E)
+                    actions.isActing = true
+                else keys.add(e.keyCode)
             }
 
             override fun keyReleased(e: KeyEvent) {
@@ -77,7 +80,9 @@ class Controller : JPanel() {
     private fun addML() {
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent?) {
-                actions.mouseClicked = true
+                if (e?.button == MouseEvent.BUTTON1)
+                    actions.mouseClicked = true
+                else actions.teleporting = true
             }
         })
     }
@@ -111,16 +116,16 @@ class Controller : JPanel() {
         }
     }
 
-    fun getAct() : Boolean = KeyEvent.VK_E in keys
-
     override fun paint(g: Graphics?) {
         val g2 = g as Graphics2D?
-        if (clear) {
-            g2?.fillRect(0, 0, width, height)
-        }
+
+        g2?.fillRect(0, 0, width, height)
+
 
         drawMap(g2)
         drawMovable(g2)
+        drawMechs(g2)
+        drawMovableWalls(g2)
         drawCharacter(g2)
     }
 
@@ -140,12 +145,31 @@ class Controller : JPanel() {
 //        t = true
     }
 
+    private fun drawMovableWalls(g2: Graphics2D?) {
+        for (elem in world.currentLevel.movableWalls) {
+            val size = elem.halfSize * 2
+            g2?.color = Color.getHSBColor(0.666f, 0.7f, 0.9f)
+            val pos = (elem.pos - elem.halfSize).toInt()
+            g2?.drawRect(pos.x, pos.y, size.width, size.height)
+//            g2?.drawString(elem.state.vertState.toString(), pos.x, pos.y + size.height + 10)
+        }
+    }
+
+    private fun drawMechs(g2: Graphics2D?) {
+        for (elem in world.currentLevel.mechs) {
+            val size = elem.halfSize * 2
+            g2?.color = Color.getHSBColor(0.17f, 0.7f, 0.9f)
+            val pos = (elem.pos - elem.halfSize).toInt()
+            g2?.drawRect(pos.x, pos.y, size.width, size.height)
+//            g2?.drawString(elem.state.vertState.toString(), pos.x, pos.y + size.height + 10)
+        }
+    }
+
     private fun drawMovable(g2: Graphics2D?) {
         for (elem in world.currentLevel.movable) {
             val size = elem.halfSize * 2
             g2?.color = Color.getHSBColor(0.3f, 0.7f, 0.45f)
             val pos = (elem.pos - elem.halfSize).toInt()
-//            g2?.drawOval(pos.x, pos.y, size.width, size.height)
             g2?.drawRect(pos.x, pos.y, size.width, size.height)
 //            g2?.drawString(elem.state.vertState.toString(), pos.x, pos.y + size.height + 10)
         }
@@ -156,18 +180,17 @@ class Controller : JPanel() {
         val size = character.halfSize * 2
         g2?.color = Color.cyan
         val pos = (character.pos - character.halfSize).toInt()
-//        g2?.drawOval(pos.x, pos.y, size.width, size.height)
         g2?.drawRect(pos.x, pos.y, size.width, size.height)
 //        g2?.drawString(character.state.vertState.toString(), pos.x, pos.y + size.height + 10)
 
-        g2?.color = Color.BLACK
-        g2?.fillRect(400, 400, 600, 600)
-        g2?.color = Color.WHITE
-        g2?.drawString(character.pos.toString(), 500, 500)
-        g2?.drawString(character.pos.toInt().toString(), 500, 600)
-        g2?.drawString((character.pos.toInt() / world.tile.width).toString(), 500, 700)
+//        g2?.color = Color.BLACK
+//        g2?.fillRect(400, 400, 600, 600)
+//        g2?.color = Color.WHITE
+//        g2?.drawString(character.pos.toString(), 500, 500)
+//        g2?.drawString(character.pos.toInt().toString(), 500, 600)
+//        g2?.drawString((character.pos.toInt() / world.tile.width).toString(), 500, 700)
 //        g2?.drawString(actions.mousePos.toString(), 500, 670)
-//        g2?.drawString(world.activeMovable.toString(), 500, 650)
+//        g2?.drawString(world.character.movable.toString(), 500, 650)
     }
 }
 
