@@ -2,7 +2,7 @@ package controller
 
 import gameInstances.states.enums.IType
 import gameInstances.World
-import gameInstances.movables.Movable
+import gameInstances.items.movables.Movable
 import gameInstances.states.ActionKeys
 import gameInstances.states.enums.Dir
 import graphicInstances.Size
@@ -12,7 +12,6 @@ import java.awt.event.*
 import javax.swing.AbstractAction
 import javax.swing.JPanel
 import javax.swing.Timer
-import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.system.exitProcess
@@ -110,7 +109,7 @@ class Controller : JPanel() {
     override fun paint(g: Graphics?) {
         val g2 = g as Graphics2D?
 
-        g2?.color = if(actions.isMap) Color.getHSBColor(0.56f, 0.6f, 0.1f) else Color.GRAY
+        g2?.color = if(actions.isMap) Color.getHSBColor(0.56f, 0.6f, 0.1f) else Color.LIGHT_GRAY
         g2?.fillRect(0, 0, width, height)
 
         if (!actions.isMap) {
@@ -159,7 +158,8 @@ class Controller : JPanel() {
             when {
                 !areas[map[y][x].areaNum].isChecked ->
                     g2?.color = Color.getHSBColor(0.56f, 0.6f, 0.1f)
-                map[y][x].type == IType.SOLID -> g2?.color = Color.GRAY
+                map[y][x].type == IType.SOLID -> g2?.color = Color.LIGHT_GRAY
+                map[y][x].type == IType.DOOR -> g2?.color = Color.WHITE
                 else -> g2?.color = Color.BLACK
             }
             g2?.fillRect(x * width + (if (outScreenX) -1 else 1) * offset.x,
@@ -174,7 +174,8 @@ class Controller : JPanel() {
         val height = world.tile.height
         map.indices.forEach { y -> map[y].indices.forEach { x ->
             when (map[y][x].type) {
-                IType.SOLID -> g2?.color = Color.GRAY
+                IType.SOLID -> g2?.color = Color.LIGHT_GRAY
+                IType.DOOR -> g2?.color = Color.white
                 else -> g2?.color = Color.BLACK
             }
             g2?.fillRect(x * width + (if (outScreenX) -1 else 1) * offset.x,
@@ -199,7 +200,12 @@ class Controller : JPanel() {
 
     private fun drawCharacter(g2: Graphics2D?) {
         val character = world.character
-        drawElem(g2, Color.cyan, character)
+        val size = character.halfSize * 2
+        val pos = (character.pos - character.halfSize).toInt()
+        g2?.color = Color.cyan
+//        drawElem(g2, Color.cyan, character)
+        g2?.drawOval(pos.x + (if (outScreenX) -1 else 1) * offset.x,
+                pos.y + (if (outScreenY) -1 else 1) * offset.y, size.width, size.height)
     }
 
     private fun drawElem(g2: Graphics2D?, color: Color, elem: Movable) {

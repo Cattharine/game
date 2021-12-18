@@ -1,4 +1,4 @@
-package gameInstances.movables
+package gameInstances.items.movables
 
 import gameInstances.World
 import gameInstances.states.enums.IType

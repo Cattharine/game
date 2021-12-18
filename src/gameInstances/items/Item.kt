@@ -1,6 +1,6 @@
-package gameInstances
+package gameInstances.items
 
-import gameInstances.movables.Movable
+import gameInstances.items.movables.Movable
 import gameInstances.states.enums.IType
 
 open class Item(val name: String, val type: IType, val areaNum: Int) {

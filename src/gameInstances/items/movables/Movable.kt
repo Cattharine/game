@@ -1,7 +1,8 @@
-package gameInstances.movables
+package gameInstances.items.movables
 
-import gameInstances.Item
+import gameInstances.items.Item
 import gameInstances.World
+import gameInstances.items.Door
 import gameInstances.states.enums.IType
 import gameInstances.states.enums.Dir
 import gameInstances.states.enums.VertState
@@ -10,8 +11,6 @@ import graphicInstances.VectorD
 import graphicInstances.Size
 import graphicInstances.VectorInt
 import kotlin.math.abs
-import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.sign
 
 open class Movable(name: String, type: IType,
@@ -38,14 +37,20 @@ open class Movable(name: String, type: IType,
         if ((state.vertState != VertState.JUMPING || speed.y.equals(0.0)) &&
                 state.vertState != VertState.NOT_FALLING) {
             if (floorTiles.isEmpty())
-                checkFallTileEmpty(floorTiles)
+                checkFallTileEmpty(floorTiles, world)
             else when (floorTiles[0].first.type) {
                 IType.SOLID -> stopFall()
-                IType.EMPTY -> checkFallTileEmpty(floorTiles)
-                IType.MECHANISM -> checkFallTileEmpty(floorTiles)
+                IType.EMPTY -> checkFallTileEmpty(floorTiles, world)
+                IType.MECHANISM -> checkFallTileEmpty(floorTiles, world)
+                IType.DOOR -> goToTheNextLevel(world, floorTiles[0].first as Door)
             }
         }
         world.fillPoses(this)
+    }
+
+    private fun goToTheNextLevel(world: World, door: Door) {
+        if (this.name == "character")
+            world.goToTheNextLevel(door)
     }
 
     private fun stopFall() {
@@ -57,7 +62,7 @@ open class Movable(name: String, type: IType,
         state.vertState = VertState.FALLING
     }
 
-    private fun checkFallTileEmpty(floorTiles: ArrayList<Pair<Item, VectorInt>>) {
+    private fun checkFallTileEmpty(floorTiles: ArrayList<Pair<Item, VectorInt>>, world: World) {
         if (floorTiles.isEmpty())
             startFall()
         else {
@@ -67,7 +72,7 @@ open class Movable(name: String, type: IType,
             }
             if (movables.isEmpty())
                 startFall()
-            else hitMovableFalling(movables, hitAct = { stopFall() }, freeAct = { startFall() })
+            else hitMovableFalling(movables, hitAct = { stopFall() }, freeAct = { startFall() }, world = world)
         }
     }
 
@@ -82,20 +87,21 @@ open class Movable(name: String, type: IType,
         val sYTile = toMapY(getUpY(false))
         val eYTile = toMapY(getDownY(false))
         val inters = world.checkInterX(sYTile, eYTile, sXTile, eXTile)
-        changeX(hor, inters)
+        changeX(hor, inters, world)
     }
 
-    private fun changeX(hor: Dir, inters: ArrayList<Pair<Item, VectorInt>>) {
+    private fun changeX(hor: Dir, inters: ArrayList<Pair<Item, VectorInt>>, world: World) {
         if (inters.isEmpty())
-            hitEmptyX(hor, inters)
+            hitEmptyX(hor, inters, world)
         else when (inters[0].first.type) {
-            IType.EMPTY -> hitEmptyX(hor, inters)
+            IType.EMPTY -> hitEmptyX(hor, inters, world)
             IType.SOLID -> hitSolidX(hor, inters[0].second.x)
-            IType.MECHANISM -> hitEmptyX(hor, inters)
+            IType.MECHANISM -> hitEmptyX(hor, inters, world)
+            IType.DOOR -> goToTheNextLevel(world, inters[0].first as Door)
         }
     }
 
-    private fun hitEmptyX(hor: Dir, inters: ArrayList<Pair<Item, VectorInt>>) {
+    private fun hitEmptyX(hor: Dir, inters: ArrayList<Pair<Item, VectorInt>>, world: World) {
         if (inters.isEmpty())
             pos.x = pos.x + speed.x
         else {
@@ -106,11 +112,11 @@ open class Movable(name: String, type: IType,
                         movables.add(movable)}}
             if (movables.isEmpty())
                 pos.x = pos.x + speed.x
-            else hitMovableX(hor, movables)
+            else hitMovableX(hor, movables, world)
         }
     }
 
-    private fun hitMovableX(hor: Dir, others: ArrayList<Movable>) {
+    private fun hitMovableX(hor: Dir, others: ArrayList<Movable>, world: World) {
         val sign = hor.getValue()
         var res: Movable? = null
         val otherDir = hor.getOpposite()
@@ -125,15 +131,21 @@ open class Movable(name: String, type: IType,
             }
         }
         if (res != null && hasInterY(res as Movable) && sign * (resB - border) < sign * speed.x) {
-            speed.x = 0.0
-            pos.x = resB - sign * halfSize.width
+            when((res as Movable).type) {
+                IType.SOLID -> {
+                    speed.x = 0.0
+                    pos . x = resB -sign * halfSize.width
+                }
+                IType.DOOR -> goToTheNextLevel(world, (res as Door))
+                else -> pos.x = pos.x + speed.x
+            }
         }
         else pos.x = pos.x + speed.x
     }
 
-    fun hasInterY(other: Movable, withMech: Boolean = false) =
+    fun hasInterY(other: Movable, withMechanism: Boolean = false) =
             abs(pos.y - other.pos.y) < halfSize.height + other.halfSize.height &&
-            (other.type != IType.MECHANISM || withMech)
+            (other.type != IType.MECHANISM || withMechanism)
 
     private fun hitSolidX(hor: Dir, nearestTile: Int) {
         speed.x = 0.0
@@ -151,20 +163,21 @@ open class Movable(name: String, type: IType,
         val sXTile = toMapX(getX(Dir.LEFT, false))
         val eXTile = toMapX(getX(Dir.RIGHT, false))
         val inters  = world.checkInterY(sXTile, eXTile, sYTile, eYTile)
-        changeY(inters)
+        changeY(inters, world)
     }
 
-    private fun changeY(inters: ArrayList<Pair<Item, VectorInt>>) {
+    private fun changeY(inters: ArrayList<Pair<Item, VectorInt>>, world: World) {
         if (inters.isEmpty())
-            hitEmptyY(inters)
+            hitEmptyY(inters, world)
         else when (inters[0].first.type) {
-            IType.EMPTY -> hitEmptyY(inters)
+            IType.EMPTY -> hitEmptyY(inters, world)
             IType.SOLID -> hitSolidY(inters[0].second.y)
-            IType.MECHANISM -> hitEmptyY(inters)
+            IType.MECHANISM -> hitEmptyY(inters, world)
+            IType.DOOR -> goToTheNextLevel(world, inters[0].first as Door)
         }
     }
 
-    private fun hitEmptyY(inters: ArrayList<Pair<Item, VectorInt>>) {
+    private fun hitEmptyY(inters: ArrayList<Pair<Item, VectorInt>>, world: World) {
         if (inters.isEmpty())
             pos.y = pos.y + speed.y
         else {
@@ -175,42 +188,42 @@ open class Movable(name: String, type: IType,
                         movables.add(movable)}}
             if (movables.isEmpty())
                 pos.y = pos.y + speed.y
-            else hitMovableY(movables)
+            else hitMovableY(movables, world)
         }
     }
 
-    private fun hitMovableY(others: ArrayList<Movable>) {
+    private fun hitMovableY(others: ArrayList<Movable>, world: World) {
         when(state.vertState) {
-            VertState.JUMPING -> hitMovableJumping(others)
+            VertState.JUMPING -> hitMovableJumping(others, world = world)
             VertState.FALLING -> hitMovableFalling(others,
                     hitAct = { resB -> hitMovableAct(resB) },
-                    freeAct = { pos.y += speed.y})
+                    freeAct = { pos.y += speed.y}, world = world)
             VertState.NOT_FALLING -> when {
                 speed.y > 0 -> hitMovableFalling(others,
                         hitAct = { resB -> hitMovableAct(resB) },
-                        freeAct = { pos.y += speed.y})
-                speed.y < 0 -> hitMovableJumping(others)
+                        freeAct = { pos.y += speed.y}, world = world)
+                speed.y < 0 -> hitMovableJumping(others, world = world)
                 else -> {}
             }
             else -> {}
         }
     }
-    private fun hitMovableJumping(others: ArrayList<Movable>) {
+    private fun hitMovableJumping(others: ArrayList<Movable>, world: World) {
         hitMovableY(others,
                 getOtherBorder = { other -> other.getDownY(true) },
                 getThisBorder = { cur -> cur.getUpY(true) },
                 finalCond = {resB, border -> border - resB < -speed.y},
                 hitAct = { resB -> hitMovableAct(resB)},
-                freeAct = {pos.y += speed.y})
+                freeAct = {pos.y += speed.y}, world = world)
     }
 
     private fun hitMovableFalling(others: ArrayList<Movable>,
-                                  hitAct: (Double) -> Unit, freeAct: () -> Unit) {
+                                  hitAct: (Double) -> Unit, freeAct: () -> Unit, world: World) {
         hitMovableY(others,
                 getOtherBorder = { other -> other.getUpY(true) },
                 getThisBorder = { current -> current.getDownY(true) },
                 finalCond = {resB, border -> resB - border <= speed.y},
-                hitAct = hitAct, freeAct = freeAct)
+                hitAct = hitAct, freeAct = freeAct, world = world)
     }
 
     private fun hitMovableAct(resB: Double) {
@@ -226,7 +239,7 @@ open class Movable(name: String, type: IType,
     private fun hitMovableY(others: ArrayList<Movable>, getOtherBorder: (Movable) -> Double,
                             getThisBorder: (Movable) -> Double,
                             finalCond: (Double, Double) -> Boolean,
-                            hitAct: (Double) -> Unit, freeAct: () -> Unit) {
+                            hitAct: (Double) -> Unit, freeAct: () -> Unit, world: World) {
         val sign = if (state.vertState != VertState.NOT_FALLING) state.vertState.getValue() else -1 * sign(speed.y)
         var res: Movable? = null
         var resB = Double.MAX_VALUE
@@ -239,14 +252,19 @@ open class Movable(name: String, type: IType,
                 resB = otherB
             }
         }
-        if (res != null && hasInterX(res as Movable) && finalCond(resB, border))
-            hitAct(resB)
+        if (res != null && hasInterX(res as Movable) && finalCond(resB, border)) {
+            when((res as Movable).type) {
+                IType.SOLID -> hitAct(resB)
+                IType.DOOR -> goToTheNextLevel(world, res as Door)
+                else -> freeAct()
+            }
+        }
         else freeAct()
     }
 
-    fun hasInterX(other: Movable, withMech: Boolean = false) =
+    fun hasInterX(other: Movable, withMechanism: Boolean = false) =
             abs(pos.x  - other.pos.x) < halfSize.width + other.halfSize.width &&
-                    (other.type != IType.MECHANISM || withMech)
+                    (other.type != IType.MECHANISM || withMechanism)
 
     private fun hitSolidY(nearestTile: Int) {
         if (state.vertState != VertState.NOT_FALLING)

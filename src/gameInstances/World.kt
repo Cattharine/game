@@ -1,7 +1,12 @@
 package gameInstances
 
-import gameInstances.movables.Character
-import gameInstances.movables.Movable
+import gameInstances.items.Door
+import gameInstances.items.Item
+import gameInstances.items.movables.Character
+import gameInstances.items.movables.Movable
+import gameInstances.levels.Level
+import gameInstances.levels.Lvl1
+import gameInstances.levels.Lvl2
 import gameInstances.states.ActionKeys
 import gameInstances.states.enums.Dir
 import gameInstances.states.enums.IType
@@ -12,8 +17,19 @@ import kotlin.math.max
 import kotlin.math.min
 
 class World(val tile : Size) {
-    val currentLevel = Level(tile)
-    val character = Character(Size(9, 9), VectorD(190.0, 270.0), tile, Size(5, 5))
+    private val allLevels = ArrayList<Level>()
+    private val levels = HashMap<String, Level>()
+
+    init {
+        allLevels.add(Lvl1(tile))
+        allLevels.add(Lvl2(tile))
+        allLevels[0].doors[0].nextLevel = allLevels[1]
+        allLevels[1].doors[0].nextLevel = allLevels[0]
+    }
+
+    var currentLevel : Level = allLevels[0]
+    val character = Character(Size(9, 9),
+            VectorD(currentLevel.initialCharPos.x, currentLevel.initialCharPos.y), tile, Size(5, 5))
 
     fun update(actions: ActionKeys) {
         checkMechs(actions)
@@ -72,7 +88,7 @@ class World(val tile : Size) {
     }
 
     private fun getInter(x: Int, y: Int) = when(currentLevel.getType(x, y)) {
-        IType.SOLID -> Pair(currentLevel.getItem(x, y), VectorInt(x, y))
+        IType.SOLID, IType.DOOR -> Pair(currentLevel.getItem(x, y), VectorInt(x, y))
         IType.EMPTY -> {
             if (currentLevel.getItem(x, y).movables.isNotEmpty())
                 Pair(currentLevel.getItem(x, y), VectorInt(x, y))
@@ -112,4 +128,13 @@ class World(val tile : Size) {
 
     fun getSizeOfCurrentLevel() = Size(currentLevel.map[0].size * tile.width,
             currentLevel.map.size * tile.height)
+
+    fun goToTheNextLevel(door: Door) {
+        currentLevel.finalCharPos = character.pos
+        levels[currentLevel.name] = currentLevel
+        currentLevel = door.nextLevel
+        if (!levels.containsKey(currentLevel.name))
+            character.pos = VectorD(currentLevel.initialCharPos.x, currentLevel.initialCharPos.y)
+        else character.pos = VectorD(currentLevel.finalCharPos.x, currentLevel.finalCharPos.y)
+    }
 }

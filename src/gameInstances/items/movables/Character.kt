@@ -1,6 +1,6 @@
-package gameInstances.movables
+package gameInstances.items.movables
 
-import gameInstances.Item
+import gameInstances.items.Item
 import gameInstances.World
 import gameInstances.states.ActionKeys
 import gameInstances.states.enums.Dir
@@ -9,8 +9,6 @@ import gameInstances.states.enums.VertState
 import graphicInstances.Size
 import graphicInstances.VectorD
 import graphicInstances.VectorInt
-import java.lang.Math.pow
-import java.lang.Math.sqrt
 import kotlin.math.abs
 import kotlin.math.pow
 
