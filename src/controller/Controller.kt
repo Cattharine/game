@@ -2,6 +2,7 @@ package controller
 
 import gameInstances.states.enums.IType
 import gameInstances.World
+import gameInstances.movables.Movable
 import gameInstances.states.ActionKeys
 import gameInstances.states.enums.Dir
 import graphicInstances.Size
@@ -13,40 +14,30 @@ import javax.swing.JPanel
 import javax.swing.Timer
 import kotlin.system.exitProcess
 
-
 class Controller : JPanel() {
     var actions = ActionKeys(Dir.NO, Dir.NO, isActing = false, isMap = false,
             mousePos = VectorInt(0, 0), mouseClicked = false, teleporting = false)
     val keys = HashSet<Int>()
     val world = World(Size(20, 20))
-    var clear = true
-    var t = false
-    var br = false
 
-    val timer = Timer(10, object : AbstractAction() {
+    private val timer = Timer(10, object : AbstractAction() {
         override fun actionPerformed(e: ActionEvent) {
-            br = checkBr()
-            if (!br) {
-                clear = false
-                clearTrail()
-                actions.hor = getHorDir()
-                actions.vert = getVertDir()
-                if (!actions.isMap) {
-                    world.update(actions)
-                }
-                actions.isActing = false
-                actions.mouseClicked = false
-                actions.teleporting = false
-                invalidate()
-                repaint()
+            actions.hor = getHorDir()
+            actions.vert = getVertDir()
+            if (!actions.isMap) {
+                world.update(actions)
             }
+            actions.isActing = false
+            actions.mouseClicked = false
+            actions.teleporting = false
+            invalidate()
+            repaint()
         }
     })
 
     init {
         isFocusable = true
         isDoubleBuffered = true
-        br = false
         timer.start()
         addKL()
         addMML()
@@ -91,17 +82,6 @@ class Controller : JPanel() {
         })
     }
 
-    fun clearTrail() {
-        if (KeyEvent.VK_P in keys) {
-            t = false
-            clear = true
-            invalidate()
-            repaint()
-        }
-    }
-
-    fun checkBr() = KeyEvent.VK_K in keys
-
     fun getHorDir() : Dir {
         return when {
             KeyEvent.VK_RIGHT in keys == KeyEvent.VK_LEFT in keys -> Dir.NO
@@ -128,7 +108,7 @@ class Controller : JPanel() {
         if (!actions.isMap) {
             drawMapAll(g2)
             drawMovable(g2)
-            drawMechs(g2)
+            drawMechanisms(g2)
             drawMovableWalls(g2)
             drawCharacter(g2)
         }
@@ -170,60 +150,29 @@ class Controller : JPanel() {
     }
 
     private fun drawMovableWalls(g2: Graphics2D?) {
-        for (elem in world.currentLevel.movableWalls) {
-            val size = elem.halfSize * 2
-            g2?.color = Color.getHSBColor(0.666f, 0.7f, 0.9f)
-            val pos = (elem.pos - elem.halfSize).toInt()
-            g2?.drawRect(pos.x, pos.y, size.width, size.height)
-//            g2?.drawString(elem.state.vertState.toString(), pos.x, pos.y + size.height + 10)
-        }
+        world.currentLevel.movableWalls
+            .forEach { drawElem(g2, Color.getHSBColor(0.666f, 0.7f, 0.9f), it) }
     }
 
-    private fun drawMechs(g2: Graphics2D?) {
-        for (elem in world.currentLevel.mechs) {
-            val size = elem.halfSize * 2
-            g2?.color = Color.getHSBColor(0.17f, 0.7f, 0.9f)
-            val pos = (elem.pos - elem.halfSize).toInt()
-            g2?.drawRect(pos.x, pos.y, size.width, size.height)
-//            g2?.drawString(elem.state.vertState.toString(), pos.x, pos.y + size.height + 10)
-        }
+    private fun drawMechanisms(g2: Graphics2D?) {
+        world.currentLevel.mechanisms
+            .forEach { drawElem(g2, Color.getHSBColor(0.17f, 0.7f, 0.9f), it) }
     }
 
     private fun drawMovable(g2: Graphics2D?) {
-        for (elem in world.currentLevel.movable) {
-            val size = elem.halfSize * 2
-            g2?.color = Color.getHSBColor(0.3f, 0.7f, 0.45f)
-            val pos = (elem.pos - elem.halfSize).toInt()
-            g2?.drawRect(pos.x, pos.y, size.width, size.height)
-//            g2?.drawString(elem.state.vertState.toString(), pos.x, pos.y + size.height + 10)
-        }
+        world.currentLevel.movable
+            .forEach { drawElem(g2, Color.getHSBColor(0.3f, 0.7f, 0.45f), it) }
     }
 
     private fun drawCharacter(g2: Graphics2D?) {
         val character = world.character
-        val size = character.halfSize * 2
-        g2?.color = Color.cyan
-        val pos = (character.pos - character.halfSize).toInt()
-        g2?.drawRect(pos.x, pos.y, size.width, size.height)
-//        g2?.drawString(character.state.vertState.toString(), pos.x, pos.y + size.height + 10)
+        drawElem(g2, Color.cyan, character)
+    }
 
-//        g2?.color = Color.BLACK
-//        g2?.fillRect(400, 400, 600, 600)
-//        g2?.color = Color.WHITE
-//        g2?.drawString(character.pos.toString(), 500, 500)
-//        g2?.drawString(character.pos.toInt().toString(), 500, 600)
-//        g2?.drawString((character.pos.toInt() / world.tile.width).toString(), 500, 700)
-//        g2?.drawString(actions.mousePos.toString(), 500, 670)
-//        g2?.drawString(world.character.movable.toString(), 500, 650)
+    private fun drawElem(g2: Graphics2D?, color: Color, elem: Movable) {
+        val size = elem.halfSize * 2
+        g2?.color = color
+        val pos = (elem.pos - elem.halfSize).toInt()
+        g2?.drawRect(pos.x, pos.y, size.width, size.height)
     }
 }
-
-
-//        val width = width
-//        val height = height
-//        val k = width / world.tile.width
-//        val l = height / world.tile.height
-//        (0 .. k + 1).forEach { g2?.drawLine(it * world.tile.width, 0,
-//            it * world.tile.width, height) }
-//        (0 .. l + 1).forEach { g2?.drawLine(0, it * world.tile.height,
-//            width, it * world.tile.height) }

@@ -1,6 +1,6 @@
 package gameInstances
 
-import gameInstances.movables.Mech
+import gameInstances.movables.Mechanism
 import gameInstances.movables.Movable
 import gameInstances.movables.MovableWall
 import gameInstances.states.enums.IType
@@ -28,11 +28,11 @@ class Level(tile: Size) {
     val map : List<List<Item>>
     val movable : ArrayList<Movable>
     val movableWalls: ArrayList<MovableWall>
-    val areaNum = 4
-    val mechs: ArrayList<Mech>
-    val areas: Array<Area>
+    private val areaNum = 4
+    val mechanisms: ArrayList<Mechanism>
+    val areas: Array<Area> = Array(areaNum) { Area(-1) }
+
     init {
-        areas = Array(areaNum) {Area(-1)}
         map = lines.map { it
             .split("|")
             .map {char -> val area = Area(Integer.parseInt(char[1].toString()) - 1)
@@ -47,7 +47,7 @@ class Level(tile: Size) {
         initializeMovables(tile)
         movableWalls = ArrayList()
         initializeMMovables(tile)
-        mechs = ArrayList()
+        mechanisms = ArrayList()
         initializeMechs(tile)
     }
 
@@ -68,12 +68,12 @@ class Level(tile: Size) {
     }
 
     private fun initializeMechs(tile: Size) {
-        mechs.add(Mech(Size(10, 1), VectorD(330.0, 39.0), tile))
-        mechs.add(Mech(Size(10, 1), VectorD(30.0, 59.0), tile))
+        mechanisms.add(Mechanism(Size(10, 1), VectorD(330.0, 39.0), tile))
+        mechanisms.add(Mechanism(Size(10, 1), VectorD(30.0, 59.0), tile))
 
-        movableWalls[0].movables.add(mechs[0])
-        movableWalls[1].movables.add(mechs[0])
-        movableWalls[2].movables.add(mechs[1])
+        movableWalls[0].movables.add(mechanisms[0])
+        movableWalls[1].movables.add(mechanisms[0])
+        movableWalls[2].movables.add(mechanisms[1])
     }
 
     fun getType(x: Int, y: Int) = map[y][x].type

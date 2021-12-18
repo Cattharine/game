@@ -7,7 +7,7 @@ import gameInstances.states.enums.VertState
 import graphicInstances.Size
 import graphicInstances.VectorD
 
-class Mech(halfSize: Size, pos: VectorD, tile: Size):
+class Mechanism(halfSize: Size, pos: VectorD, tile: Size):
         Movable("", IType.MECHANISM, halfSize, pos, tile,false, VertState.NOT_FALLING) {
     var isActive = false
 

@@ -34,7 +34,7 @@ class World(val tile : Size) {
     }
 
     private fun checkMechs(actions: ActionKeys) {
-        for (elem in currentLevel.mechs) {
+        for (elem in currentLevel.mechanisms) {
             elem.check(this, actions, character)
         }
     }

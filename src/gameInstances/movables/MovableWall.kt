@@ -15,7 +15,7 @@ class MovableWall(halfSize: Size, pos: VectorD, tile: Size, private val minSize:
         world.clearPoses(this)
         var isActive = true
         for (elem in movables) {
-            if (!(elem as Mech).isActive)
+            if (!(elem as Mechanism).isActive)
                 isActive = false
         }
         if (isActive) {
