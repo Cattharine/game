@@ -303,7 +303,7 @@ open class Movable(name: String, type: IType,
 
     //VP = Vertical Position
     private fun getVPStanding(vert: Dir) = when(vert) {
-        Dir.JUMP -> {
+        Dir.UP -> {
             state.vertState = VertState.JUMPING
             speed.y = -maxSp.y
             getUpY(true)
@@ -335,7 +335,7 @@ open class Movable(name: String, type: IType,
     }
 
     private fun getVPNotFalling(vert: Dir) = when(vert) {
-        Dir.JUMP -> {
+        Dir.UP -> {
             speed.y = -accel.y * 3.0
             getUpY(true)
         }

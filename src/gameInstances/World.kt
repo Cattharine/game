@@ -60,7 +60,7 @@ class World(val tile : Size) {
     }
 
     private fun changeActive(actions: ActionKeys) {
-        if (actions.mouseClicked) {
+        if (actions.grabbingObject) {
             val pos = VectorInt(actions.mousePos.x / tile.width, actions.mousePos.y / tile.height)
             val item = currentLevel.tryGetItem(pos.x, pos.y)
             character.setMovable(item, actions)
@@ -128,8 +128,7 @@ class World(val tile : Size) {
     private fun getMapX(pos: Double) = pos.toInt() / tile.width
     private fun getMapY(pos: Double) = pos.toInt() / tile.height
 
-    fun getSizeOfCurrentLevel() = Size(currentLevel.map[0].size * tile.width,
-            currentLevel.map.size * tile.height)
+    fun getSizeOfCurrentLevel() = currentLevel.getSize(tile)
 
     fun goToTheNextLevel(door: Door) {
         currentLevel.finalCharPos = character.pos

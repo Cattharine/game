@@ -19,9 +19,10 @@ import kotlin.system.exitProcess
 
 class Controller : JPanel() {
     var actions = ActionKeys(Dir.NO, Dir.NO, action = ActionButton.NO,
-            mousePos = VectorInt(0, 0), mouseClicked = false, teleporting = false)
+            mousePos = VectorInt(0, 0), grabbingObject = false, teleporting = false)
     val keys = HashSet<Int>()
     val world = World(Size(20, 20))
+    val mapC = MapController(world)
     var offset = VectorInt(0 ,0)
     var outScreenX = true
     var outScreenY = true
@@ -31,16 +32,16 @@ class Controller : JPanel() {
             actions.hor = getHorDir()
             actions.vert = getVertDir()
             when(actions.action) {
-                ActionButton.NO, ActionButton.ACTION -> world.update(actions)
-                ActionButton.MAP -> mapAction()
-                ActionButton.SAVE -> world.save()
-                ActionButton.LOAD -> world.load()
-                ActionButton.MAIN_MENU -> mainMenuAction()
-                ActionButton.STATE -> stateAction()
+                ActionButton.NO, ActionButton.ACTION -> worldAction(actions)
+                ActionButton.MAP -> mapAction(actions)
+                ActionButton.SAVE -> saveAction(actions)
+                ActionButton.LOAD -> loadAction(actions)
+                ActionButton.MAIN_MENU -> mainMenuAction(actions)
+                ActionButton.STATE -> stateAction(actions)
             }
             if (actions.action == ActionButton.ACTION)
                 actions.action = ActionButton.NO
-            actions.mouseClicked = false
+            actions.grabbingObject = false
             actions.teleporting = false
             invalidate()
             repaint()
@@ -56,15 +57,27 @@ class Controller : JPanel() {
         addML()
     }
 
-    private fun mapAction() {
-        
+    private fun worldAction(actions: ActionKeys) {
+        world.update(actions)
     }
 
-    private fun mainMenuAction() {
+    private fun mapAction(actions: ActionKeys) {
+        mapC.mapAction(actions, width, height)
+    }
+
+    private fun mainMenuAction(actions: ActionKeys) {
 
     }
 
-    private fun stateAction() {
+    private fun saveAction(actions: ActionKeys) {
+        world.save()
+    }
+
+    private fun loadAction(actions: ActionKeys) {
+        world.load()
+    }
+
+    private fun stateAction(actions: ActionKeys) {
 
     }
 
@@ -77,9 +90,7 @@ class Controller : JPanel() {
                         exitProcess(0)
                     }
                     KeyEvent.VK_E -> actions.action = ActionButton.ACTION
-                    KeyEvent.VK_M -> actions.action = if (actions.action == ActionButton.NO)
-                        ActionButton.MAP
-                    else ActionButton.NO
+                    KeyEvent.VK_M -> updateMapState()
                     KeyEvent.VK_F5 -> actions.action = ActionButton.SAVE
                     KeyEvent.VK_F6 -> actions.action = ActionButton.LOAD
                     else -> keys.add(e.keyCode)
@@ -92,11 +103,24 @@ class Controller : JPanel() {
         })
     }
 
+    private fun updateMapState() {
+        actions.action = if (actions.action == ActionButton.NO)
+            ActionButton.MAP
+        else ActionButton.NO
+    }
+
     private fun addMML() {
         addMouseMotionListener(object : MouseMotionAdapter() {
             override fun mouseMoved(e: MouseEvent) {
-                actions.mousePos = VectorInt(e.xOnScreen - (if (outScreenX) -1 else 1) * offset.x,
-                        e.yOnScreen - (if (outScreenY) -1 else 1) * offset.y)
+                when(actions.action) {
+                    ActionButton.NO, ActionButton.ACTION -> actions.mousePos =
+                            VectorInt(e.xOnScreen - (if (outScreenX) -1 else 1) * offset.x,
+                                    e.yOnScreen - (if (outScreenY) -1 else 1) * offset.y)
+                    ActionButton.MAP -> actions.mousePos = VectorInt(
+                            e.xOnScreen - (if (mapC.outScreenX) -1 else 1) * mapC.offset.x,
+                            e.yOnScreen - (if (mapC.outScreenY) -1 else 1) * mapC.offset.y)
+                    else -> {}
+                }
             }
         })
     }
@@ -105,7 +129,7 @@ class Controller : JPanel() {
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent?) {
                 if (e?.button == MouseEvent.BUTTON1)
-                    actions.mouseClicked = true
+                    actions.grabbingObject = true
                 else actions.teleporting = true
             }
         })
@@ -124,7 +148,7 @@ class Controller : JPanel() {
         return when {
             KeyEvent.VK_DOWN in keys == KeyEvent.VK_UP in keys -> Dir.NO
             KeyEvent.VK_DOWN in keys -> Dir.DOWN
-            KeyEvent.VK_UP in keys -> Dir.JUMP
+            KeyEvent.VK_UP in keys -> Dir.UP
             else -> Dir.NO
         }
     }
@@ -132,27 +156,32 @@ class Controller : JPanel() {
     override fun paint(g: Graphics?) {
         val g2 = g as Graphics2D?
 
-        g2?.color = if(actions.action == ActionButton.MAP)
-            Color.getHSBColor(0.56f, 0.6f, 0.1f) else Color.LIGHT_GRAY
+        g2?.color =
+                if(actions.action == ActionButton.MAP)
+                    Color.getHSBColor(0.56f, 0.6f, 0.1f)
+                else Color.LIGHT_GRAY
         g2?.fillRect(0, 0, width, height)
 
-        if (actions.action != ActionButton.MAP) {
-            drawGameField(g2)
-        }
-        else {
-            drawMap(g2)
-            drawCharacter(g2)
+        when(actions.action) {
+            ActionButton.NO, ActionButton.ACTION -> drawGameField(g2)
+            ActionButton.MAP -> mapC.paint(g2, actions)
+            else -> {}
         }
     }
 
     private fun drawGameField(g2: Graphics2D?) {
         setOffset()
+        mapC.offset = VectorInt(offset.x, offset.y)
+        mapC.currentLevel = world.currentLevel
 
         drawMapAll(g2)
         drawMovable(g2)
         drawMechanisms(g2)
         drawMovableWalls(g2)
         drawCharacter(g2)
+        g2?.color = Color.BLUE
+        g2?.drawOval(actions.mousePos.x + (if (outScreenX) -1 else 1) * offset.x,
+                actions.mousePos.y + (if (outScreenY) -1 else 1) * offset.y, 3, 3)
     }
 
     private fun setOffset() {
@@ -169,27 +198,6 @@ class Controller : JPanel() {
             else -> height / 2 - levelSize.height / 2
         }
         offset = VectorInt(offsetX, offsetY)
-    }
-
-    private fun drawMap(g2: Graphics2D?) {
-        //для каждого уровня
-        val map = world.currentLevel.map
-        val areas = world.currentLevel.areas
-        val width = world.tile.width
-        val height = world.tile.height
-
-        map.indices.forEach { y -> map[y].indices.forEach { x ->
-            when {
-                !areas[map[y][x].areaNum].isChecked ->
-                    g2?.color = Color.getHSBColor(0.56f, 0.6f, 0.1f)
-                map[y][x].type == IType.SOLID -> g2?.color = Color.LIGHT_GRAY
-                map[y][x].type == IType.DOOR -> g2?.color = Color.WHITE
-                else -> g2?.color = Color.BLACK
-            }
-            g2?.fillRect(x * width + (if (outScreenX) -1 else 1) * offset.x,
-                    y * height + (if (outScreenY) -1 else 1) * offset.y, width, height)
-        }}
-
     }
 
     private fun drawMapAll(g2: Graphics2D?) {

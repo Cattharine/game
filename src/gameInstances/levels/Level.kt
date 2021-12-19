@@ -29,4 +29,6 @@ open class Level(areaNum: Int, val initialCharPos: VectorD) {
         return if (y >= 0 && y < map.size && x >= 0 && x < map[0].size) getItem(x, y)
         else null
     }
+
+    fun getSize(tile: Size) = Size(map[0].size * tile.width, map.size * tile.height)
 }
