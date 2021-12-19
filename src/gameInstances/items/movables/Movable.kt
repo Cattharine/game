@@ -21,8 +21,8 @@ open class Movable(name: ItemName, type: IType,
                    initialVertState: VertState = VertState.STANDING) : Item(name, type, -1) {
     var speed: VectorD = VectorD(0.0, 0.0)
     val state = MState(isAvailable, initialVertState)
-    val accel: VectorD = VectorD(2.5, 0.1)
-    val maxSp: VectorD = VectorD(2.5, 4.0)
+    val accel: VectorD = VectorD(2.0, 0.1)
+    val maxSp: VectorD = VectorD(2.0, 4.0)
 
     fun move(hor: Dir, vert: Dir, world: World) {
         world.clearPoses(this)
@@ -59,6 +59,7 @@ open class Movable(name: ItemName, type: IType,
         if (this.name == ItemName.CHARACTER) {
             movables.add(fragment)
             world.currentLevel.fragments.remove(fragment)
+            world.clearPoses(fragment)
             (this as Character).abilities.add(fragment.ability)
         }
     }

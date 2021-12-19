@@ -5,10 +5,7 @@ import gameInstances.items.Item
 import gameInstances.items.ItemName
 import gameInstances.items.movables.Character
 import gameInstances.items.movables.Movable
-import gameInstances.levels.Level
-import gameInstances.levels.LevelName
-import gameInstances.levels.Lvl1
-import gameInstances.levels.Lvl2
+import gameInstances.levels.*
 import gameInstances.states.ActionKeys
 import gameInstances.states.enums.Dir
 import gameInstances.states.enums.IType
@@ -27,8 +24,11 @@ class World(val tile : Size) {
         allLevels[lvl1.name] = lvl1
         val lvl2 = Lvl2(tile)
         allLevels[lvl2.name] = lvl2
+        val lvl3 = Lvl3(tile)
+        allLevels[lvl3.name] = lvl3
         lvl1.addDoors(allLevels)
         lvl2.addDoors(allLevels)
+        lvl3.addDoors(allLevels)
     }
 
     var currentLevel : Level = allLevels[LevelName.LVL1] as Level

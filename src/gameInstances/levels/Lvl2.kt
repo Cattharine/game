@@ -18,7 +18,7 @@ class Lvl2(tile: Size) : Level(4,  VectorD(40.0, 270.0)) {
     init {
         name = LevelName.LVL2
         lines = arrayOf(
-                "s1|s1|s1|s1|s1|s1|s1|s1|s1|s1|s1|s1|s3| 3|s3|s3| 3|s3|s3|s3",
+                "s1|s1|s1|s1|s1|s1|s1|s1|s1|s1|s1|s1|s3| 3|s3|s3|s3|s3|s3|s3",
                 "s1| 1| 1| 1| 1|s1| 1| 1|s1| 1| 1| 1|s3| 3| 3| 3| 3| 3| 3|s3",
                 "s1|s1| 1| 1| 1| 1| 1|s1|s1| 2|s3| 3| 3| 3| 3| 3| 3| 3|s3|s3",
                 "s1| 1| 1| 1| 1| 1| 1| 1|s1| 2|s3|s3| 3| 3| 3| 3| 3|s3| 3|s3",
@@ -27,7 +27,7 @@ class Lvl2(tile: Size) : Level(4,  VectorD(40.0, 270.0)) {
                 "s4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4|s4|s4",
                 "s4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4|s4",
                 "s4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4|s4",
-                "s4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4|s4|s4",
+                "d4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4|s4|s4",
                 "s4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4| 4|d4",
                 "s4|s4|s4|s4|s4|s4|s4|s4|s4|s4|s4|s4|s4|s4|s4|s4|s4|s4|s4|s4")
 
@@ -81,5 +81,6 @@ class Lvl2(tile: Size) : Level(4,  VectorD(40.0, 270.0)) {
 
     fun addDoors(levels: HashMap<LevelName, Level>) {
         doors[0].nextLevel = levels[LevelName.LVL1] as Level
+        doors[1].nextLevel = levels[LevelName.LVL3] as Level
     }
 }
