@@ -57,11 +57,11 @@ class Lvl2(tile: Size) : Level(4,  VectorD(690.0, 270.0)) {
     }
 
     private fun initializeMMovables(tile: Size) {
-        movableWalls.add(MovableWall(Size(10, 10), VectorD(210.0, 130.0),
+        movableWalls.add(MovableWall({list -> list[0]}, Size(10, 10), VectorD(210.0, 130.0),
                 tile, Size(0, 0), VectorInt(0, 1)))
-        movableWalls.add(MovableWall(Size(10, 10), VectorD(170.0, 130.0),
+        movableWalls.add(MovableWall({list -> list[0]}, Size(10, 10), VectorD(170.0, 130.0),
                 tile, Size(0,0), VectorInt(0, 1)))
-        movableWalls.add(MovableWall(Size(10, 10), VectorD(190.0, 70.0),
+        movableWalls.add(MovableWall({list -> list[0]}, Size(10, 10), VectorD(190.0, 70.0),
                 tile, Size(0, 0), VectorInt(1, 0)))
     }
 
@@ -72,5 +72,9 @@ class Lvl2(tile: Size) : Level(4,  VectorD(690.0, 270.0)) {
         movableWalls[0].addMechanism(mechanisms[0]) { bool -> bool }
         movableWalls[1].addMechanism(mechanisms[0]) { bool -> !bool }
         movableWalls[2].addMechanism(mechanisms[1]) { bool -> !bool }
+    }
+
+    fun addDoors(levels: HashMap<String, Level>) {
+        doors[0].nextLevel = levels["lvl1"] as Level
     }
 }

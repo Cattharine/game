@@ -17,17 +17,19 @@ import kotlin.math.max
 import kotlin.math.min
 
 class World(val tile : Size) {
-    private val allLevels = ArrayList<Level>()
+    private val allLevels = HashMap<String, Level>()
     private val levels = HashMap<String, Level>()
 
     init {
-        allLevels.add(Lvl1(tile))
-        allLevels.add(Lvl2(tile))
-        allLevels[0].doors[0].nextLevel = allLevels[1]
-        allLevels[1].doors[0].nextLevel = allLevels[0]
+        val lvl1 = Lvl1(tile)
+        allLevels[lvl1.name] = lvl1
+        val lvl2 = Lvl2(tile)
+        allLevels[lvl2.name] = lvl2
+        lvl1.addDoors(allLevels)
+        lvl2.addDoors(allLevels)
     }
 
-    var currentLevel : Level = allLevels[0]
+    var currentLevel : Level = allLevels["lvl1"] as Level
     val character = Character(Size(9, 9),
             VectorD(currentLevel.initialCharPos.x, currentLevel.initialCharPos.y), tile, Size(5, 5))
 
@@ -69,7 +71,7 @@ class World(val tile : Size) {
             checkInter(startX, endX, startY, endY, getCurInter = {main, other -> getInter(main, other)})
 
     fun checkInterY(startX: Int, endX: Int, startY: Int, endY: Int) =
-        checkInter(startY, endY, startX, endX, getCurInter = {main, other -> getInter(other, main)})
+            checkInter(startY, endY, startX, endX, getCurInter = {main, other -> getInter(other, main)})
 
 
     private fun checkInter(mainStart: Int, mainEnd: Int,
@@ -136,5 +138,12 @@ class World(val tile : Size) {
         if (!levels.containsKey(currentLevel.name))
             character.pos = VectorD(currentLevel.initialCharPos.x, currentLevel.initialCharPos.y)
         else character.pos = VectorD(currentLevel.finalCharPos.x, currentLevel.finalCharPos.y)
+    }
+
+    fun save() {
+    }
+
+    fun load() {
+
     }
 }

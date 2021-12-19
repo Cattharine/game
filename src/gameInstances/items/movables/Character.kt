@@ -71,7 +71,9 @@ class Character(halfSize:Size, pos: VectorD, tile: Size, private val minSize: Si
 
     private fun trySetMovable(current: Movable, actions: ActionKeys) {
         if (current.hasPoint(actions.mousePos) &&
-                current.state.isAvailable && movable == null && halfSize != minSize) {
+                current.state.isAvailable && movable == null && halfSize != minSize &&
+                (abs(current.pos.x - pos.x)).pow(2.0) +
+                (abs(current.pos.y - pos.y)).pow(2.0) <= maxDist.pow(2)) {
             movable = current
             current.state.vertState = VertState.NOT_FALLING
             reduceSize()
@@ -95,8 +97,8 @@ class Character(halfSize:Size, pos: VectorD, tile: Size, private val minSize: Si
                 item?.type == IType.EMPTY && !item.hasSolidMovables() && halfSize != minSize &&
                         world.canTeleportTo(item) -> {
                     this.pos = VectorD(
-                        (pos.x * tile.width).toDouble() + halfSize.x,
-                        (pos.y * tile.height).toDouble() + halfSize.y
+                            (pos.x * tile.width).toDouble() + halfSize.x,
+                            (pos.y * tile.height).toDouble() + halfSize.y
                     )
                     reduceSize()
                 }

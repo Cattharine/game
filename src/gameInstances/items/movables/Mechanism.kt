@@ -13,7 +13,7 @@ class Mechanism(halfSize: Size, pos: VectorD, tile: Size):
 
     fun check(world: World, actions: ActionKeys, character: Movable) {
         world.clearPoses(this)
-        if (actions.isActing && hasInterX(character, true) && hasInterY(character, true)) {
+        if (actions.isActing() && hasInterX(character, true) && hasInterY(character, true)) {
             isActive = !isActive
         }
         world.fillPoses(this)

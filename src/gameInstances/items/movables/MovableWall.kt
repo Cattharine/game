@@ -7,15 +7,15 @@ import graphicInstances.Size
 import graphicInstances.VectorD
 import graphicInstances.VectorInt
 
-class MovableWall(halfSize: Size, pos: VectorD, tile: Size, private val minSize: Size, private val dif: VectorInt):
+class MovableWall(val func: (List<Boolean>) -> Boolean,
+                  halfSize: Size, pos: VectorD, tile: Size, private val minSize: Size, private val dif: VectorInt):
         Movable("", IType.SOLID, halfSize, pos, tile,false,  VertState.NOT_FALLING) {
     private val maxSize = halfSize
     private val values = ArrayList<(Boolean) -> (Boolean)>()
 
     fun check(world: World) {
         world.clearPoses(this)
-        var isActive = true
-        movables.indices.forEach { if(!values[it]((movables[it] as Mechanism).isActive)) isActive = false }
+        val isActive = func(movables.indices.map { values[it]((movables[it] as Mechanism).isActive) })
         if (isActive) {
             val prevSize = halfSize
             halfSize = halfSize.max(dif, minSize)

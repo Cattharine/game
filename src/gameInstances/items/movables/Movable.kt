@@ -145,7 +145,7 @@ open class Movable(name: String, type: IType,
 
     fun hasInterY(other: Movable, withMechanism: Boolean = false) =
             abs(pos.y - other.pos.y) < halfSize.height + other.halfSize.height &&
-            (other.type != IType.MECHANISM || withMechanism)
+                    (other.type != IType.MECHANISM || withMechanism)
 
     private fun hitSolidX(hor: Dir, nearestTile: Int) {
         speed.x = 0.0
