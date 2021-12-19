@@ -2,7 +2,9 @@ package gameInstances.items.movables
 
 import gameInstances.items.Item
 import gameInstances.World
+import gameInstances.items.ItemName
 import gameInstances.states.ActionKeys
+import gameInstances.states.enums.Ability
 import gameInstances.states.enums.Dir
 import gameInstances.states.enums.IType
 import gameInstances.states.enums.VertState
@@ -13,7 +15,8 @@ import kotlin.math.abs
 import kotlin.math.pow
 
 class Character(halfSize:Size, pos: VectorD, tile: Size, private val minSize: Size) :
-        Movable("character", IType.SOLID, halfSize, pos, tile,false) {
+        Movable(ItemName.CHARACTER, IType.SOLID, halfSize, pos, tile,false) {
+    val abilities = ArrayList<Ability>()
     var movable : Movable? = null
     private var dif = VectorInt(1, 1)
     private val maxCounter = 1000
@@ -59,7 +62,7 @@ class Character(halfSize:Size, pos: VectorD, tile: Size, private val minSize: Si
     }
 
     fun setMovable(item: Item?, actions: ActionKeys) {
-        if (movable == null)
+        if (movable == null && abilities.contains(Ability.OBJECT_MANIPULATION))
             when(item?.type) {
                 IType.EMPTY ->
                     if (item.movables.isNotEmpty())
@@ -90,7 +93,7 @@ class Character(halfSize:Size, pos: VectorD, tile: Size, private val minSize: Si
     }
 
     private fun tryToTeleport(actions: ActionKeys, world: World) {
-        if (state.vertState == VertState.STANDING) {
+        if (state.vertState == VertState.STANDING && abilities.contains(Ability.TELEPORTATION)) {
             val pos = VectorInt(actions.mousePos.x / tile.width, actions.mousePos.y / tile.height)
             val item = world.currentLevel.tryGetItem(pos.x, pos.y)
             when {

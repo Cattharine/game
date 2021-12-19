@@ -3,6 +3,7 @@ package gameInstances.items.movables
 import gameInstances.items.Item
 import gameInstances.World
 import gameInstances.items.Door
+import gameInstances.items.ItemName
 import gameInstances.states.enums.IType
 import gameInstances.states.enums.Dir
 import gameInstances.states.enums.VertState
@@ -13,7 +14,7 @@ import graphicInstances.VectorInt
 import kotlin.math.abs
 import kotlin.math.sign
 
-open class Movable(name: String, type: IType,
+open class Movable(name: ItemName, type: IType,
                    var halfSize : Size, var pos: VectorD,
                    val tile: Size,
                    isAvailable: Boolean = true,
@@ -43,14 +44,23 @@ open class Movable(name: String, type: IType,
                 IType.EMPTY -> checkFallTileEmpty(floorTiles, world)
                 IType.MECHANISM -> checkFallTileEmpty(floorTiles, world)
                 IType.DOOR -> goToTheNextLevel(world, floorTiles[0].first as Door)
+                IType.FRAGMENT -> grabFragment(world, floorTiles[0].first as Fragment)
             }
         }
         world.fillPoses(this)
     }
 
     private fun goToTheNextLevel(world: World, door: Door) {
-        if (this.name == "character")
+        if (this.name == ItemName.CHARACTER)
             world.goToTheNextLevel(door)
+    }
+
+    private fun grabFragment(world: World, fragment: Fragment) {
+        if (this.name == ItemName.CHARACTER) {
+            movables.add(fragment)
+            world.currentLevel.fragments.remove(fragment)
+            (this as Character).abilities.add(fragment.ability)
+        }
     }
 
     private fun stopFall() {
@@ -98,6 +108,7 @@ open class Movable(name: String, type: IType,
             IType.SOLID -> hitSolidX(hor, inters[0].second.x)
             IType.MECHANISM -> hitEmptyX(hor, inters, world)
             IType.DOOR -> goToTheNextLevel(world, inters[0].first as Door)
+            IType.FRAGMENT -> grabFragment(world, inters[0].first as Fragment)
         }
     }
 
@@ -136,7 +147,8 @@ open class Movable(name: String, type: IType,
                     speed.x = 0.0
                     pos . x = resB -sign * halfSize.width
                 }
-                IType.DOOR -> goToTheNextLevel(world, (res as Door))
+                IType.DOOR -> goToTheNextLevel(world, res as Door)
+                IType.FRAGMENT -> grabFragment(world, res as Fragment)
                 else -> pos.x = pos.x + speed.x
             }
         }
@@ -174,6 +186,7 @@ open class Movable(name: String, type: IType,
             IType.SOLID -> hitSolidY(inters[0].second.y)
             IType.MECHANISM -> hitEmptyY(inters, world)
             IType.DOOR -> goToTheNextLevel(world, inters[0].first as Door)
+            IType.FRAGMENT -> grabFragment(world, inters[0].first as Fragment)
         }
     }
 
@@ -256,6 +269,7 @@ open class Movable(name: String, type: IType,
             when((res as Movable).type) {
                 IType.SOLID -> hitAct(resB)
                 IType.DOOR -> goToTheNextLevel(world, res as Door)
+                IType.FRAGMENT -> grabFragment(world, res as Fragment)
                 else -> freeAct()
             }
         }

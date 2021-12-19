@@ -2,9 +2,11 @@ package gameInstances
 
 import gameInstances.items.Door
 import gameInstances.items.Item
+import gameInstances.items.ItemName
 import gameInstances.items.movables.Character
 import gameInstances.items.movables.Movable
 import gameInstances.levels.Level
+import gameInstances.levels.LevelName
 import gameInstances.levels.Lvl1
 import gameInstances.levels.Lvl2
 import gameInstances.states.ActionKeys
@@ -17,8 +19,8 @@ import kotlin.math.max
 import kotlin.math.min
 
 class World(val tile : Size) {
-    private val allLevels = HashMap<String, Level>()
-    private val levels = HashMap<String, Level>()
+    private val allLevels = HashMap<LevelName, Level>()
+    private val levels = HashMap<LevelName, Level>()
 
     init {
         val lvl1 = Lvl1(tile)
@@ -29,13 +31,14 @@ class World(val tile : Size) {
         lvl2.addDoors(allLevels)
     }
 
-    var currentLevel : Level = allLevels["lvl1"] as Level
+    var currentLevel : Level = allLevels[LevelName.LVL1] as Level
     val character = Character(Size(9, 9),
             VectorD(currentLevel.initialCharPos.x, currentLevel.initialCharPos.y), tile, Size(5, 5))
 
     fun update(actions: ActionKeys) {
-        checkMechs(actions)
+        checkMechanisms(actions)
         checkMWalls()
+        fillFragments()
         for (elem in currentLevel.movable) {
             if (elem != character.movable) {
                 elem.checkFall(this)
@@ -53,9 +56,16 @@ class World(val tile : Size) {
         }
     }
 
-    private fun checkMechs(actions: ActionKeys) {
+    private fun checkMechanisms(actions: ActionKeys) {
         for (elem in currentLevel.mechanisms) {
             elem.check(this, actions, character)
+        }
+    }
+
+    private fun fillFragments() {
+        for (elem in currentLevel.fragments) {
+            clearPoses(elem)
+            fillPoses(elem)
         }
     }
 
@@ -90,7 +100,7 @@ class World(val tile : Size) {
     }
 
     private fun getInter(x: Int, y: Int) = when(currentLevel.getType(x, y)) {
-        IType.SOLID, IType.DOOR -> Pair(currentLevel.getItem(x, y), VectorInt(x, y))
+        IType.SOLID, IType.DOOR, IType.FRAGMENT -> Pair(currentLevel.getItem(x, y), VectorInt(x, y))
         IType.EMPTY -> {
             if (currentLevel.getItem(x, y).movables.isNotEmpty())
                 Pair(currentLevel.getItem(x, y), VectorInt(x, y))
@@ -110,7 +120,7 @@ class World(val tile : Size) {
         (left .. right).forEach { x ->
             (ceil .. floor).forEach { y ->
                 val item = currentLevel.getItem(x, y)
-                if (movable.name == "character")
+                if (movable.name == ItemName.CHARACTER)
                     currentLevel.areas[item.areaNum].isChecked = true
                 action(item.movables, movable)
             }

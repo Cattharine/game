@@ -91,11 +91,11 @@ class MapController(private val world: World) {
     private fun writeNext(door: Door, g2: Graphics2D?, x: Int, y: Int, width: Int, height: Int) {
         g2?.color = Color.blue
         g2?.font = Font(Font.MONOSPACED, Font.BOLD, 16)
-        g2?.drawString(door.nextLevel.name, x * width + (if (outScreenX) -1 else 1) * offset.x,
+        g2?.drawString(door.nextLevel.name.getName(), x * width + (if (outScreenX) -1 else 1) * offset.x,
                 y * height + (if (outScreenY) -1 else 1) * offset.y + 30)
         g2?.color = Color.gray
         g2?.font = Font(Font.MONOSPACED, Font.PLAIN, 16)
-        g2?.drawString(door.nextLevel.name, x * width + (if (outScreenX) -1 else 1) * offset.x,
+        g2?.drawString(door.nextLevel.name.getName(), x * width + (if (outScreenX) -1 else 1) * offset.x,
                 y * height + (if (outScreenY) -1 else 1) * offset.y + 30)
     }
 

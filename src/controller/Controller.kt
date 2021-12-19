@@ -179,6 +179,7 @@ class Controller : JPanel() {
         drawMechanisms(g2)
         drawMovableWalls(g2)
         drawCharacter(g2)
+        drawFragments(g2)
         g2?.color = Color.BLUE
         g2?.drawOval(actions.mousePos.x + (if (outScreenX) -1 else 1) * offset.x,
                 actions.mousePos.y + (if (outScreenY) -1 else 1) * offset.y, 3, 3)
@@ -228,6 +229,11 @@ class Controller : JPanel() {
     private fun drawMovable(g2: Graphics2D?) {
         world.currentLevel.movable
                 .forEach { drawElem(g2, Color.getHSBColor(0.3f, 0.7f, 0.45f), it) }
+    }
+
+    private fun drawFragments(g2: Graphics2D?) {
+        world.currentLevel.fragments
+                .forEach { drawElem(g2, Color.getHSBColor(13f, 100.0f, 82.0f), it) }
     }
 
     private fun drawCharacter(g2: Graphics2D?) {

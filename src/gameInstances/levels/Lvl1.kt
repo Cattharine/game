@@ -2,9 +2,12 @@ package gameInstances.levels
 import gameInstances.Area
 import gameInstances.items.Door
 import gameInstances.items.Item
+import gameInstances.items.ItemName
+import gameInstances.items.movables.Fragment
 import gameInstances.items.movables.Mechanism
 import gameInstances.items.movables.Movable
 import gameInstances.items.movables.MovableWall
+import gameInstances.states.enums.Ability
 import gameInstances.states.enums.IType
 import graphicInstances.Size
 import graphicInstances.VectorD
@@ -12,7 +15,7 @@ import graphicInstances.VectorInt
 
 class Lvl1(tile: Size): Level(4, VectorD(270.0, 270.0)) {
     init {
-        name = "lvl1"
+        name = LevelName.LVL1
         lines = arrayOf(
                 "s1|s1|s1|s1|s1|s1|s1|s1|s1|s1|s1|s1|s3| 3|s3|s3| 3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3|s3",
                 "s1| 1| 1| 1| 1|s1| 1| 1|s1| 1| 1| 1|s3| 3| 3| 3| 3| 3| 3|s3| 3| 3| 3| 3| 3| 3|s3| 3| 3| 3| 3| 3| 3|s3| 3|s3| 3| 3| 3| 3| 3| 3|s3| 3| 3| 3| 3| 3| 3|s3| 3|s3| 3| 3| 3| 3| 3| 3|s3| 3| 3| 3| 3| 3| 3|s3| 3|s3| 3| 3| 3| 3| 3| 3|s3| 3| 3| 3| 3| 3| 3|s3| 3|s3",
@@ -37,21 +40,22 @@ class Lvl1(tile: Size): Level(4, VectorD(270.0, 270.0)) {
                         areas[area.number] = area
                     when(char[0]) {
                         'd' -> {val d = Door(area.number); doors.add(d); d}
-                        's' -> Item("", IType.SOLID, area.number)
-                        ' ' -> Item("", IType.EMPTY, area.number)
-                        else -> Item("", IType.EMPTY, area.number)
+                        's' -> Item(ItemName.EMPTY, IType.SOLID, area.number)
+                        ' ' -> Item(ItemName.EMPTY, IType.EMPTY, area.number)
+                        else -> Item(ItemName.EMPTY, IType.EMPTY, area.number)
                     }}}
         map = preMap + preMap + preMap + preMap
 
         initializeMovables(tile)
         initializeMMovables(tile)
         initializeMechanisms(tile)
+        initializeFragments(tile)
     }
 
     private fun initializeMovables(tile: Size) {
-        movable.add(Movable("", IType.SOLID, Size(50, 15),
+        movable.add(Movable(ItemName.EMPTY, IType.SOLID, Size(50, 15),
                 VectorD(180.0, 185.0), tile))
-        movable.add(Movable("", IType.SOLID, Size(8, 8),
+        movable.add(Movable(ItemName.EMPTY, IType.SOLID, Size(8, 8),
                 VectorD(190.0, 160.0), tile))
     }
 
@@ -73,7 +77,11 @@ class Lvl1(tile: Size): Level(4, VectorD(270.0, 270.0)) {
         movableWalls[2].addMechanism(mechanisms[1]) { bool -> !bool }
     }
 
-    fun addDoors(levels: HashMap<String, Level>) {
-        doors[0].nextLevel = levels["lvl2"] as Level
+    private fun initializeFragments(tile: Size) {
+        fragments.add(Fragment(Ability.TELEPORTATION, VectorD(30.0, 30.0), tile))
+    }
+
+    fun addDoors(levels: HashMap<LevelName, Level>) {
+        doors[0].nextLevel = levels[LevelName.LVL2] as Level
     }
 }

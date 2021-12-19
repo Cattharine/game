@@ -4,5 +4,6 @@ enum class IType {
     EMPTY,
     SOLID,
     MECHANISM,
-    DOOR
+    DOOR,
+    FRAGMENT
 }
