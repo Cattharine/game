@@ -12,13 +12,13 @@ class MainMenuController {
     private var gameColor = Color.WHITE
 
     fun action(actions: ActionKeys, height: Int) {
-        if (actions.mousePos.y >= (height / 4 - 40) && actions.mousePos.y <= (height / 4 - 10)) {
+        if (actions.mousePos.y >= (height / 4 - 70) && actions.mousePos.y <= (height / 4 - 40)) {
             if (actions.grabbingObject)
                 goToGame(actions)
             gameColor = Color.cyan
             exitColor = Color.WHITE
         }
-        else if (actions.mousePos.y >= (height / 4 + 40) && actions.mousePos.y <= (height / 4 + 70)){
+        else if (actions.mousePos.y >= (height / 4 + 20) && actions.mousePos.y <= (height / 4 + 50)){
             if (actions.grabbingObject)
                 exit()
             exitColor = Color.cyan

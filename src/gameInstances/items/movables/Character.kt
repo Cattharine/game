@@ -22,7 +22,7 @@ class Character(halfSize:Size, pos: VectorD, tile: Size, private val minSize: Si
     private val maxCounter = 1000
     private var counter = maxCounter
     private val maxSize = halfSize
-    var maxDist = 120.0
+    var maxDist = 500.0
 
     fun act(actions: ActionKeys, world: World) {
         if (movable == null) {
