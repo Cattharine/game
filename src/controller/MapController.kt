@@ -2,9 +2,14 @@ package controller
 
 import gameInstances.World
 import gameInstances.items.Door
+import gameInstances.items.movables.Fragment
+import gameInstances.items.movables.Movable
 import gameInstances.states.ActionKeys
+import gameInstances.states.enums.ActionButton
 import gameInstances.states.enums.Dir
 import gameInstances.states.enums.IType
+import gameInstances.states.enums.VertState
+import graphicInstances.VectorD
 import graphicInstances.VectorInt
 import java.awt.*
 
@@ -16,9 +21,11 @@ class MapController(private val world: World) {
     var doors = ArrayList<Pair<Door, VectorInt>>()
     val speed = VectorInt(3, 3)
 
-    fun mapAction(actions: ActionKeys, width: Int, height: Int) {
+    fun mapAction(actions: ActionKeys, width: Int, height: Int, gameController: GameController) {
         if (actions.grabbingObject)
             tryChangeLevel(actions)
+        else if (actions.teleporting)
+            tryTeleport(actions, gameController)
         val levelSize = currentLevel.getSize(world.tile)
         outScreenX = levelSize.width > width
         outScreenY = levelSize.height > height
@@ -36,6 +43,26 @@ class MapController(private val world: World) {
             outScreenX = true
             outScreenY = true
         }
+    }
+
+    private fun tryTeleport(actions: ActionKeys, gameController: GameController) {
+        if (world.character.state.vertState == VertState.STANDING) {
+            val item = currentLevel.tryGetItem(actions.mousePos.x / world.tile.width,
+                    actions.mousePos.y / world.tile.height)
+            item?.movables?.forEach {
+                if (it.type == IType.FRAGMENT && (it as Fragment).checked)
+                    teleport(actions, it, gameController)
+            }
+        }
+    }
+
+    private fun teleport(actions: ActionKeys, fragment: Fragment, gameController: GameController) {
+        world.currentLevel = currentLevel
+        world.character.pos = VectorD(fragment.pos.x, fragment.pos.y)
+        gameController.offset = VectorInt(offset.x, offset.y)
+        gameController.outScreenX = outScreenX
+        gameController.outScreenY = outScreenY
+        actions.action = ActionButton.NO
     }
 
     private fun changeOffsetX(hor: Dir) {
@@ -60,6 +87,7 @@ class MapController(private val world: World) {
         for (elem in doors) {
             writeNext(elem.first, g2, elem.second.x, elem.second.y, world.tile.width, world.tile.height)
         }
+        drawFragment(g2)
         g2?.color = Color.BLUE
         g2?.drawOval(actions.mousePos.x + (if (outScreenX) -1 else 1) * offset.x,
                 actions.mousePos.y + (if (outScreenY) -1 else 1) * offset.y, 3, 3)
@@ -108,5 +136,18 @@ class MapController(private val world: World) {
             g2?.drawOval(pos.x + (if (outScreenX) -1 else 1) * offset.x,
                     pos.y + (if (outScreenY) -1 else 1) * offset.y, size.width, size.height)
         }
+    }
+
+    private fun drawFragment(g2: Graphics2D?) {
+        currentLevel.fragments
+                .forEach { if(it.checked) drawElem(g2, Color.getHSBColor(13f, 100.0f, 82.0f), it) }
+    }
+
+    private fun drawElem(g2: Graphics2D?, color: Color, elem: Movable) {
+        val size = elem.halfSize * 2
+        g2?.color = color
+        val pos = (elem.pos - elem.halfSize).toInt()
+        g2?.drawRect(pos.x + (if (outScreenX) -1 else 1) * offset.x,
+                pos.y + (if (outScreenY) -1 else 1) * offset.y, size.width, size.height)
     }
 }

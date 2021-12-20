@@ -21,15 +21,14 @@ open class Movable(name: ItemName, type: IType,
                    initialVertState: VertState = VertState.STANDING) : Item(name, type, -1) {
     var speed: VectorD = VectorD(0.0, 0.0)
     val state = MState(isAvailable, initialVertState)
-    val accel: VectorD = VectorD(2.0, 0.1)
-    val maxSp: VectorD = VectorD(2.0, 4.0)
+    val accel: VectorD = VectorD(2.5, 0.1)
+    val maxSp: VectorD = VectorD(2.5, 4.0)
 
     fun move(hor: Dir, vert: Dir, world: World) {
         world.clearPoses(this)
         moveX(hor, world)
         moveY(vert, world)
         world.fillPoses(this)
-//        println("${pos.x}, ${pos.y}")
     }
 
     fun checkFall(world: World) {
@@ -44,7 +43,7 @@ open class Movable(name: ItemName, type: IType,
                 IType.EMPTY -> checkFallTileEmpty(floorTiles, world)
                 IType.MECHANISM -> checkFallTileEmpty(floorTiles, world)
                 IType.DOOR -> goToTheNextLevel(world, floorTiles[0].first as Door)
-                IType.FRAGMENT -> grabFragment(world, floorTiles[0].first as Fragment)
+                IType.FRAGMENT -> grabFragment(world, floorTiles[0].first as Fragment) {startFall()}
             }
         }
         world.fillPoses(this)
@@ -55,11 +54,12 @@ open class Movable(name: ItemName, type: IType,
             world.goToTheNextLevel(door)
     }
 
-    private fun grabFragment(world: World, fragment: Fragment) {
-        if (this.name == ItemName.CHARACTER) {
+    private fun grabFragment(world: World, fragment: Fragment, freeAct: () -> Unit) {
+        if (fragment.checked)
+            freeAct()
+        else if (this.name == ItemName.CHARACTER) {
             movables.add(fragment)
-            world.currentLevel.fragments.remove(fragment)
-            world.clearPoses(fragment)
+            fragment.checked = true
             (this as Character).abilities.add(fragment.ability)
         }
     }
@@ -109,7 +109,7 @@ open class Movable(name: ItemName, type: IType,
             IType.SOLID -> hitSolidX(hor, inters[0].second.x)
             IType.MECHANISM -> hitEmptyX(hor, inters, world)
             IType.DOOR -> goToTheNextLevel(world, inters[0].first as Door)
-            IType.FRAGMENT -> grabFragment(world, inters[0].first as Fragment)
+            IType.FRAGMENT -> grabFragment(world, inters[0].first as Fragment) {pos.x += speed.x}
         }
     }
 
@@ -149,7 +149,7 @@ open class Movable(name: ItemName, type: IType,
                     pos . x = resB -sign * halfSize.width
                 }
                 IType.DOOR -> goToTheNextLevel(world, res as Door)
-                IType.FRAGMENT -> grabFragment(world, res as Fragment)
+                IType.FRAGMENT -> grabFragment(world, res as Fragment, {pos.x += speed.x})
                 else -> pos.x = pos.x + speed.x
             }
         }
@@ -187,7 +187,7 @@ open class Movable(name: ItemName, type: IType,
             IType.SOLID -> hitSolidY(inters[0].second.y)
             IType.MECHANISM -> hitEmptyY(inters, world)
             IType.DOOR -> goToTheNextLevel(world, inters[0].first as Door)
-            IType.FRAGMENT -> grabFragment(world, inters[0].first as Fragment)
+            IType.FRAGMENT -> grabFragment(world, inters[0].first as Fragment) {pos.y += speed.y}
         }
     }
 
@@ -270,7 +270,7 @@ open class Movable(name: ItemName, type: IType,
             when((res as Movable).type) {
                 IType.SOLID -> hitAct(resB)
                 IType.DOOR -> goToTheNextLevel(world, res as Door)
-                IType.FRAGMENT -> grabFragment(world, res as Fragment)
+                IType.FRAGMENT -> grabFragment(world, res as Fragment) {pos.y += speed.y}
                 else -> freeAct()
             }
         }

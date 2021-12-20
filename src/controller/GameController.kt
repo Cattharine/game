@@ -80,7 +80,7 @@ class GameController(private val world: World) {
 
     private fun drawFragments(g2: Graphics2D?) {
         world.currentLevel.fragments
-                .forEach { drawElem(g2, Color.getHSBColor(13f, 100.0f, 82.0f), it) }
+                .forEach { if (!it.checked) drawElem(g2, Color.getHSBColor(13f, 100.0f, 82.0f), it) }
     }
 
     private fun drawCharacter(g2: Graphics2D?) {

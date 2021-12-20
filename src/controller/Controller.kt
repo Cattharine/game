@@ -14,12 +14,13 @@ import javax.swing.Timer
 import kotlin.system.exitProcess
 
 class Controller : JPanel() {
-    var actions = ActionKeys(Dir.NO, Dir.NO, action = ActionButton.NO,
+    var actions = ActionKeys(Dir.NO, Dir.NO, action = ActionButton.MAIN_MENU,
             mousePos = VectorInt(0, 0), grabbingObject = false, teleporting = false)
     val keys = HashSet<Int>()
     val world = World(Size(20, 20))
     val mapC = MapController(world)
     val gameC = GameController(world)
+    val mainMenuC = MainMenuController()
     val stateC = StateController(world)
 
     private val timer = Timer(10, object : AbstractAction() {
@@ -28,10 +29,10 @@ class Controller : JPanel() {
             actions.vert = getVertDir()
             when(actions.action) {
                 ActionButton.NO, ActionButton.ACTION -> world.update(actions)
-                ActionButton.MAP -> mapC.mapAction(actions, width, height)
+                ActionButton.MAP -> mapC.mapAction(actions, width, height, gameC)
                 ActionButton.SAVE -> saveAction(actions)
                 ActionButton.LOAD -> loadAction(actions)
-                ActionButton.MAIN_MENU -> mainMenuAction(actions)
+                ActionButton.MAIN_MENU -> mainMenuC.action(actions, height)
                 ActionButton.STATE -> stateC.action(actions)
             }
             if (actions.action == ActionButton.ACTION)
@@ -52,10 +53,6 @@ class Controller : JPanel() {
         addML()
     }
 
-    private fun mainMenuAction(actions: ActionKeys) {
-
-    }
-
     private fun saveAction(actions: ActionKeys) {
         world.save()
     }
@@ -68,10 +65,7 @@ class Controller : JPanel() {
         addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
                 when (e.keyCode) {
-                    KeyEvent.VK_ESCAPE -> {
-                        isVisible = false
-                        exitProcess(0)
-                    }
+                    KeyEvent.VK_ESCAPE -> actions.action = ActionButton.MAIN_MENU
                     KeyEvent.VK_E -> actions.action = ActionButton.ACTION
                     KeyEvent.VK_M -> updateMapState()
                     KeyEvent.VK_F5 -> actions.action = ActionButton.SAVE
@@ -88,15 +82,19 @@ class Controller : JPanel() {
     }
 
     private fun updateMapState() {
-        actions.action = if (actions.action == ActionButton.NO)
-            ActionButton.MAP
-        else ActionButton.NO
+        actions.action = when(actions.action) {
+            ActionButton.NO -> ActionButton.MAP
+            ActionButton.MAIN_MENU -> ActionButton.MAIN_MENU
+            else -> ActionButton.NO
+        }
     }
 
     private fun updateCharStateState() {
-        actions.action = if (actions.action == ActionButton.NO)
-            ActionButton.STATE
-        else ActionButton.NO
+        actions.action = when(actions.action) {
+            ActionButton.NO -> ActionButton.STATE
+            ActionButton.MAIN_MENU -> ActionButton.MAIN_MENU
+            else -> ActionButton.NO
+        }
     }
 
     private fun addMML() {
@@ -157,6 +155,7 @@ class Controller : JPanel() {
             ActionButton.NO, ActionButton.ACTION -> gameC.drawGameField(g2, actions, width, height, mapC)
             ActionButton.MAP -> mapC.paint(g2, actions)
             ActionButton.STATE -> stateC.paint(g2, actions)
+            ActionButton.MAIN_MENU -> mainMenuC.paint(g2, height, actions)
             else -> {}
         }
     }
