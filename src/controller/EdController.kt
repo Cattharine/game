@@ -5,7 +5,7 @@ import java.awt.Font
 import java.awt.Graphics2D
 
 class EdController {
-    val off = 20
+    private val off = 20
 
     fun draw(g2: Graphics2D?, height : Int, width: Int) {
         g2?.color = Color.WHITE
