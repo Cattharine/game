@@ -6,7 +6,6 @@ import gameInstances.items.Item
 import gameInstances.items.ItemName
 import gameInstances.items.movables.Fragment
 import gameInstances.items.movables.Mechanism
-import gameInstances.items.movables.Movable
 import gameInstances.items.movables.MovableWall
 import gameInstances.states.enums.Ability
 import gameInstances.states.enums.IType

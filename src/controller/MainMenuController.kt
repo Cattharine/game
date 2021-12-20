@@ -10,6 +10,7 @@ import kotlin.system.exitProcess
 class MainMenuController {
     private var exitColor = Color.WHITE
     private var gameColor = Color.WHITE
+    private var edC = EdController()
 
     fun action(actions: ActionKeys, height: Int) {
         if (actions.mousePos.y >= (height / 4 - 70) && actions.mousePos.y <= (height / 4 - 40)) {
@@ -38,7 +39,7 @@ class MainMenuController {
         exitProcess(0)
     }
 
-    fun paint(g2: Graphics2D?, height: Int, actions: ActionKeys) {
+    fun paint(g2: Graphics2D?, width: Int, height: Int, actions: ActionKeys) {
         g2?.color = gameColor
         g2?.font = Font(Font.MONOSPACED, Font.BOLD, 30)
         g2?.drawString("Играть", 0, height / 4 - 40)
@@ -46,5 +47,6 @@ class MainMenuController {
         g2?.drawString("Выйти", 0, height / 4 + 40)
         g2?.color = Color.BLUE
         g2?.drawOval(actions.mousePos.x,actions.mousePos.y, 3, 3)
+        edC.draw(g2, height, width)
     }
 }

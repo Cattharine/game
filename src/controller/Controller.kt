@@ -155,7 +155,7 @@ class Controller : JPanel() {
             ActionButton.NO, ActionButton.ACTION -> gameC.drawGameField(g2, actions, width, height, mapC)
             ActionButton.MAP -> mapC.paint(g2, actions)
             ActionButton.STATE -> stateC.paint(g2, actions)
-            ActionButton.MAIN_MENU -> mainMenuC.paint(g2, height, actions)
+            ActionButton.MAIN_MENU -> mainMenuC.paint(g2, width, height, actions)
             else -> {}
         }
     }
