@@ -17,7 +17,7 @@ import kotlin.math.min
 
 class World(val tile : Size) {
     private val allLevels = HashMap<LevelName, Level>()
-    private val levels = HashMap<LevelName, Level>()
+    val levels = HashMap<LevelName, Level>()
 
     init {
         val lvl1 = Lvl1(tile)
@@ -29,6 +29,9 @@ class World(val tile : Size) {
         lvl1.addDoors(allLevels)
         lvl2.addDoors(allLevels)
         lvl3.addDoors(allLevels)
+        lvl1.setConnectedDoors(allLevels)
+        lvl2.setConnectedDoors(allLevels)
+        lvl3.setConnectedDoors(allLevels)
     }
 
     var currentLevel : Level = allLevels[LevelName.LVL1] as Level
@@ -146,7 +149,7 @@ class World(val tile : Size) {
         currentLevel = door.nextLevel
         if (!levels.containsKey(currentLevel.name))
             character.pos = VectorD(currentLevel.initialCharPos.x, currentLevel.initialCharPos.y)
-        else character.pos = VectorD(currentLevel.finalCharPos.x, currentLevel.finalCharPos.y)
+        else character.pos = VectorD(door.connectedDoor.exitPos.x, door.connectedDoor.exitPos.y)
     }
 
     fun save() {

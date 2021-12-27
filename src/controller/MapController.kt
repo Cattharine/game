@@ -58,6 +58,7 @@ class MapController(private val world: World) {
 
     private fun teleport(actions: ActionKeys, fragment: Fragment, gameController: GameController) {
         world.currentLevel = currentLevel
+        world.levels[currentLevel.name] = currentLevel
         world.character.pos = VectorD(fragment.pos.x, fragment.pos.y)
         gameController.offset = VectorInt(offset.x, offset.y)
         gameController.outScreenX = outScreenX

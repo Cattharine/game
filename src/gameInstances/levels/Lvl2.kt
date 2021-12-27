@@ -80,4 +80,13 @@ class Lvl2(tile: Size) : Level(1,  VectorD(450.0, 750.0)) {
     fun addDoors(levels: HashMap<LevelName, Level>) {
         doors[0].nextLevel = levels[LevelName.LVL1] as Level
     }
+
+    fun setConnectedDoors(levels: HashMap<LevelName, Level>) {
+        doors[0].connectedDoor = (levels[LevelName.LVL1] as Lvl1).doors[0]
+        setExitPos()
+    }
+
+    fun setExitPos() {
+        doors[0].exitPos = VectorD((map[0].size - 2) * 20.0 + 10.0, 750.0)
+    }
 }
