@@ -70,8 +70,8 @@ class Controller : JPanel() {
                     KeyEvent.VK_ESCAPE -> actions.action = ActionButton.MAIN_MENU
                     KeyEvent.VK_E -> actions.action = ActionButton.ACTION
                     KeyEvent.VK_M -> updateMapState()
-                    KeyEvent.VK_F5 -> actions.action = ActionButton.SAVE
-                    KeyEvent.VK_F6 -> actions.action = ActionButton.LOAD
+                    KeyEvent.VK_F5 -> if(actions.action != ActionButton.MAIN_MENU) actions.action = ActionButton.SAVE
+                    KeyEvent.VK_F6 -> if(actions.action != ActionButton.MAIN_MENU) actions.action = ActionButton.LOAD
                     KeyEvent.VK_J -> updateCharStateState()
                     else -> keys.add(e.keyCode)
                 }

@@ -7,8 +7,10 @@ import gameInstances.items.movables.Character
 import gameInstances.items.movables.Movable
 import gameInstances.levels.*
 import gameInstances.states.ActionKeys
+import gameInstances.states.enums.Ability
 import gameInstances.states.enums.Dir
 import gameInstances.states.enums.IType
+import gameInstances.states.enums.VertState
 import graphicInstances.Size
 import graphicInstances.VectorD
 import graphicInstances.VectorInt
@@ -155,8 +157,13 @@ class World(val tile : Size) : Serializable {
     }
 
     fun save() {
+        clearPoses(character)
         val objectOutputStream = ObjectOutputStream(FileOutputStream("save1.out"))
         objectOutputStream.writeObject(character.pos)
+        objectOutputStream.writeObject(character.halfSize)
+        for (ability in character.abilities){
+            objectOutputStream.writeObject(ability)
+        }
         for (level in allLevels.keys) {
             objectOutputStream.writeObject(allLevels[level])
         }
@@ -173,6 +180,12 @@ class World(val tile : Size) : Serializable {
             var obj = objectInputStream.readObject()
             character.pos = obj as VectorD
             obj = objectInputStream.readObject()
+            character.halfSize = obj as Size
+            obj = objectInputStream.readObject()
+            while (obj is Ability) {
+                character.abilities.add(obj)
+                obj = objectInputStream.readObject()
+            }
             while (obj is Level) {
                 allLevels[obj.name] = obj
                 obj = objectInputStream.readObject()
@@ -187,5 +200,6 @@ class World(val tile : Size) : Serializable {
         } catch (ex: EOFException) {
             objectInputStream.close()
         }
+        character.state.vertState = VertState.STANDING
     }
 }
