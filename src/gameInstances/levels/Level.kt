@@ -11,8 +11,10 @@ import gameInstances.items.movables.MovableWall
 import gameInstances.states.enums.IType
 import graphicInstances.Size
 import graphicInstances.VectorD
+import java.io.ObjectOutputStream
+import java.io.Serializable
 
-open class Level(areaNum: Int, val initialCharPos: VectorD) {
+open class Level(areaNum: Int, val initialCharPos: VectorD) : Serializable {
     var name = LevelName.EMPTY
     var lines = Array(1) {""}
     var map : List<List<Item>> = List(1) { List(1) { Item(ItemName.EMPTY, IType.EMPTY, -1) } }

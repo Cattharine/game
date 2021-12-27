@@ -1,6 +1,8 @@
 package gameInstances.states.enums
 
-enum class ActionButton {
+import java.io.Serializable
+
+enum class ActionButton: Serializable {
     ACTION,
     MAP,
     SAVE,

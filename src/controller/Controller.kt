@@ -55,10 +55,12 @@ class Controller : JPanel() {
 
     private fun saveAction(actions: ActionKeys) {
         world.save()
+        actions.action = ActionButton.NO
     }
 
     private fun loadAction(actions: ActionKeys) {
         world.load()
+        actions.action = ActionButton.NO
     }
 
     private fun addKL() {

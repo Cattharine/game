@@ -1,6 +1,8 @@
 package gameInstances.levels
 
-enum class LevelName {
+import java.io.Serializable
+
+enum class LevelName: Serializable {
     EMPTY,
     LVL1,
     LVL2,

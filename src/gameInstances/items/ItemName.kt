@@ -1,6 +1,8 @@
 package gameInstances.items
 
-enum class ItemName {
+import java.io.Serializable
+
+enum class ItemName: Serializable {
     EMPTY,
     CHARACTER;
 

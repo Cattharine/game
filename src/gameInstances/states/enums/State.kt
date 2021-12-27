@@ -1,6 +1,8 @@
 package gameInstances.states.enums
 
-enum class VertState {
+import java.io.Serializable
+
+enum class VertState: Serializable {
     JUMPING,
     FALLING,
     STANDING,

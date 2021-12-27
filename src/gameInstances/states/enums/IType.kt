@@ -1,6 +1,8 @@
 package gameInstances.states.enums
 
-enum class IType {
+import java.io.Serializable
+
+enum class IType: Serializable {
     EMPTY,
     SOLID,
     MECHANISM,

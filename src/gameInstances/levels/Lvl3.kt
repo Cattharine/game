@@ -12,8 +12,9 @@ import gameInstances.states.enums.IType
 import graphicInstances.Size
 import graphicInstances.VectorD
 import graphicInstances.VectorInt
+import java.io.Serializable
 
-class Lvl3(tile: Size) : Level(6, VectorD(30.0, 30.0)) {
+class Lvl3(tile: Size) : Level(6, VectorD(30.0, 30.0)), Serializable {
     init {
         name = LevelName.LVL3
         lines = arrayOf(
@@ -81,7 +82,7 @@ class Lvl3(tile: Size) : Level(6, VectorD(30.0, 30.0)) {
         setExitPos()
     }
 
-    fun setExitPos() {
+    private fun setExitPos() {
         doors[0].exitPos = VectorD(30.0, 30.0)
     }
 }

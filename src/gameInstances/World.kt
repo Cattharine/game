@@ -12,10 +12,12 @@ import gameInstances.states.enums.IType
 import graphicInstances.Size
 import graphicInstances.VectorD
 import graphicInstances.VectorInt
+import java.io.*
 import kotlin.math.max
 import kotlin.math.min
 
-class World(val tile : Size) {
+
+class World(val tile : Size) : Serializable {
     private val allLevels = HashMap<LevelName, Level>()
     val levels = HashMap<LevelName, Level>()
 
@@ -153,9 +155,37 @@ class World(val tile : Size) {
     }
 
     fun save() {
+        val objectOutputStream = ObjectOutputStream(FileOutputStream("save1.out"))
+        objectOutputStream.writeObject(character.pos)
+        for (level in allLevels.keys) {
+            objectOutputStream.writeObject(allLevels[level])
+        }
+        objectOutputStream.writeObject(currentLevel.name)
+        for (name in levels.keys) {
+            objectOutputStream.writeObject(name)
+        }
+        objectOutputStream.close()
     }
 
     fun load() {
-
+        val objectInputStream = ObjectInputStream(FileInputStream("save1.out"))
+        try {
+            var obj = objectInputStream.readObject()
+            character.pos = obj as VectorD
+            obj = objectInputStream.readObject()
+            while (obj is Level) {
+                allLevels[obj.name] = obj
+                obj = objectInputStream.readObject()
+            }
+            currentLevel = allLevels[obj as LevelName] as Level
+            obj = objectInputStream.readObject()
+            while (obj is LevelName) {
+                levels[obj] = allLevels[obj] as Level
+                obj = objectInputStream.readObject()
+            }
+            objectInputStream.close()
+        } catch (ex: EOFException) {
+            objectInputStream.close()
+        }
     }
 }

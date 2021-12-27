@@ -1,6 +1,8 @@
 package graphicInstances
 
-class VectorD(var x: Double, var y: Double): Vector<Double> {
+import java.io.Serializable
+
+class VectorD(var x: Double, var y: Double): Vector<Double>, Serializable {
     operator fun plus(other: VectorD) = VectorD(x + other.x, y + other.y)
     operator fun minus(other: VectorD) = VectorD(x - other.x, y - other.y)
     operator fun times(value: Double) = VectorD(x * value, y * value)
@@ -15,7 +17,7 @@ class VectorD(var x: Double, var y: Double): Vector<Double> {
     }
 }
 
-open class VectorInt(var x: Int, var y: Int): Vector<Int> {
+open class VectorInt(var x: Int, var y: Int): Vector<Int>, Serializable {
     open operator fun times(value: Int) = VectorInt(x * value, y * value)
     open operator fun div(value: Int) = VectorInt(x / value, y / value)
 

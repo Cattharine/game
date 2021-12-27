@@ -4,3 +4,4 @@
 *.iml
 /src/gameInstances/*.txt
 /lib/
+/*.out

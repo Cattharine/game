@@ -1,6 +1,8 @@
 package gameInstances
 
-class Area(val number: Int) {
+import java.io.Serializable
+
+class Area(val number: Int): Serializable {
     var isChecked = false
 
     override fun equals(other: Any?): Boolean {

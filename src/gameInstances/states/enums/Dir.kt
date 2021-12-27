@@ -1,6 +1,8 @@
 package gameInstances.states.enums
 
-enum class Dir {
+import java.io.Serializable
+
+enum class Dir: Serializable {
     RIGHT,
     LEFT,
     UP,

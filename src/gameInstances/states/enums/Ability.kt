@@ -1,6 +1,8 @@
 package gameInstances.states.enums
 
-enum class Ability {
+import java.io.Serializable
+
+enum class Ability : Serializable {
     TELEPORTATION,
     OBJECT_MANIPULATION
 }
